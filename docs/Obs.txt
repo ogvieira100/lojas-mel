@@ -1,0 +1,742 @@
+Criar pastas de nivel acima com acesso ao banco de leitura mongo agora vamos criar os recursos no docker pela linha de comando não utilizaremos docker compose pois será substituido pelo kubernets 
+Primeiramente vamos criar a nossa rede 
+Para criar uma rede em Docker, você pode usar o comando `docker network create`. Abaixo está um exemplo básico de como criar uma rede chamada `minha-rede`:
+
+1. Abra o terminal ou prompt de comando.
+
+2. Execute o seguinte comando:
+
+```bash
+docker network create minha-rede
+```
+
+Isso criará uma rede chamada `minha-rede`. Se você quiser verificar se a rede foi criada com sucesso, pode listar todas as redes Docker usando o comando:
+
+```bash
+docker network ls
+```
+
+Você verá a lista de redes existentes, incluindo a `minha-rede`.
+
+Para conectar contêineres a essa rede, você pode iniciar um contêiner e atribuir a ele essa rede usando o parâmetro `--network`, por exemplo:
+
+```bash
+docker run --name meu-container --network minha-rede -d nome-da-imagem
+```
+
+Substitua `nome-da-imagem` pelo nome da imagem que você deseja executar no contêiner. Isso conectará o contêiner `meu-container` à rede `minha-rede`.
+
+Além disso, você pode especificar qual rede um contêiner deve usar ao criar uma nova rede:
+
+```bash
+docker run --name meu-container --network minha-rede -d nome-da-imagem
+
+docker network create --driver bridge minha-rede-bridge
+
+```
+nossa solução será as lojas mel
+
+
+proximo passo é criar um volume para o banco de dados 
+
+Claro, para criar um volume Docker, você pode usar o comando `docker volume create` seguido pelo nome do volume que você deseja criar. Aqui está um exemplo:
+
+```bash
+docker volume create meu_volume
+```
+
+Isso criará um volume chamado "meu_volume" que pode ser utilizado por contêineres Docker para armazenar e compartilhar dados.
+
+Se você deseja listar os volumes Docker existentes, pode utilizar o comando:
+
+```bash
+docker volume ls
+```
+
+E para mais informações sobre um volume específico, você pode usar:
+
+```bash
+docker volume inspect meu_volume
+```
+
+Os volumes Docker são úteis para persistir dados gerados por contêineres e para permitir que diferentes contêineres compartilhem informações de maneira eficiente.
+
+agora vamos instanciar nosso sql no docker 
+
+
+Para criar uma instância do SQL Server no Docker, apontando para um volume e conectando-o a uma rede, você pode seguir estes passos utilizando comandos individuais do Docker.
+
+Passo 1: Crie uma rede no Docker (se ainda não existir):
+
+```bash
+docker network create minha_rede
+```
+
+Passo 2: Crie um volume para armazenar os dados do SQL Server:
+
+```bash
+docker volume create meu_volume_sqlserver
+```
+
+Passo 3: Execute o contêiner do SQL Server, conectando-o ao volume e à rede criados:
+
+```bash
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=SuaSenhaSuperSegura!" \
+  --name meu_sql_server \
+  -p 1433:1433 \
+  -v meu_volume_sqlserver:/var/opt/mssql \
+  --network minha_rede \
+  -d mcr.microsoft.com/mssql/server:latest
+```
+
+Isso criará um contêiner chamado `meu_sql_server` usando a imagem mais recente do SQL Server fornecida pela Microsoft. O contêiner estará conectado à rede `minha_rede` e usará o volume `meu_volume_sqlserver` para persistir os dados do SQL Server.
+
+Certifique-se de substituir `SuaSenhaSuperSegura!` pela senha desejada para o usuário `SA` (System Administrator). Esse comando também mapeia a porta padrão `1433` do contêiner SQL Server para a porta `1433` do host, permitindo acessar o SQL Server a partir do host usando essa porta.
+
+Lembre-se de que você pode precisar especificar mais opções ou configurações dependendo dos requisitos específicos do seu ambiente ou versão do SQL Server que está utilizando. Certifique-se de consultar a documentação oficial da imagem Docker do SQL Server para informações detalhadas sobre as opções disponíveis.
+
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=Ann@julia2010" --name lojas-mel-db -p 1401:1433 -expose=1401 -v lojas-mel-vol:/var/opt/mssql --network lojas-mel-network -d mcr.microsoft.com/mssql/server:2022-latest
+
+montagem da imagem 
+
+lojas-mel-network
+
+lojas-mel-vol
+
+--docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Ann@julia2010' -p 1401:1433 -expose=1401   -v sqlvolume:/var/opt/mssql  -d --name=sql_linux --network db-local  mcr.microsoft.com/mssql/server:2022-latest
+
+depois de criado o banco e a rede no docker e o volume vamos resolver a criptografia assimétrica com uma chave privada e outra pública 
+
+vamos instalar esse pacote 
+
+
+NetDevPack.Security.Jwt.Store.EntityFrameworkCore -> adicione esse pacote na api de identidade 
+NetDevPack.Security.Jwt.AspNetCore -> adicione este pacote 
+
+NetDevPack.Security.Jwt.Store.FileSystem -> para gravar em arquivo file system informativo
+
+
+builder.Services.AddHttpContextAccessor(); -> adicione essa linha 
+
+builder.Services.AddMemoryCache();-> é necessário incluir essa linha 
+/*pacote de chave publica privada*/
+
+builder.Services.AddJwksManager()
+    .PersistKeysToDatabaseStore<ApplicationUserContext>();
+
+
+builder.Services.AddDbContext<ApplicationUserContext>(options =>
+               options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))); -> adicione essa linha de configuração 
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    options.Password.RequiredLength = 6;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireDigit = false;
+    options.User.RequireUniqueEmail = true;
+
+}).AddErrorDescriber<IdentityMensagensPortugues>()
+  .AddEntityFrameworkStores<ApplicationUserContext>()
+  .AddDefaultTokenProviders();
+
+
+Add-Migration SecurityKeys -> adicione a migração 
+e.. Update-Database -Verbose tabela incluida lembrando que tudo isso é um pacote vc pode implementar sua segurança
+
+
+//localhost/
+app.UseJwksDiscovery("/minha-chave");  -> adicionar para ter um endpoint novo 
+
+para ajustar a chamada de geração de token 
+    async Task<string> GenerateJwt(List<string> roles, List<Claim> addclaims, string userId, string email)
+  {
+
+      if (addclaims == null)
+          addclaims = new List<Claim>();
+
+      if (!string.IsNullOrEmpty(userId) && !addclaims.Any(x => x.Type == JwtRegisteredClaimNames.Sub))
+          addclaims.Add(new Claim(JwtRegisteredClaimNames.Sub, userId));
+      if (!string.IsNullOrEmpty(email) && !addclaims.Any(x => x.Type == JwtRegisteredClaimNames.Email))
+          addclaims.Add(new Claim(JwtRegisteredClaimNames.Email, email));
+
+      foreach (var role in roles)
+          addclaims.Add(new Claim(ClaimTypes.Role, role));
+
+
+      var identityClaims = new ClaimsIdentity();
+      identityClaims.AddClaims(addclaims);
+
+      var tokenHandler = new JwtSecurityTokenHandler();
+      //var key = Encoding.ASCII.GetBytes("");
+      var key =  await _jsonWebKeySetService.GetCurrentSigningCredentials();-> pegar a  SigningCredentials
+
+       [ApiVersion("1.0")]
+ [Route("api/v{version:apiVersion}/user")]
+ [Authorize]
+ public class UserController : MainController
+ {
+     private readonly SignInManager<IdentityUser> _signInManager;
+     private readonly UserManager<IdentityUser> _userManager;
+     private readonly AppSettings _appSettings;
+     private readonly IPasswordHasher<IdentityUser> _passwordHasher;
+     readonly IUser _user;
+     readonly IJsonWebKeySetService _jsonWebKeySetService;-> interface necessária 
+
+     readonly IMapper _mapper;
+     
+
+
+     public UserController(SignInManager<IdentityUser> signInManager,
+                               UserManager<IdentityUser> userManager,
+                               IOptions<AppSettings> appSettings,
+                               IMapper mapper,
+                               IJsonWebKeySetService jsonWebKeySetService, 
+                               IUser user,
+                               IPasswordHasher<IdentityUser> passwordHasher,
+                               LNotifications notifications)
+         : base(notifications)
+     {
+         _user = user;
+         _mapper = mapper;
+         _signInManager = signInManager;
+         _userManager = userManager;
+         _appSettings = appSettings.Value;
+         _passwordHasher = passwordHasher;
+         _jsonWebKeySetService  = jsonWebKeySetService;  
+     }
+      var currentUser = $"{_user.GetHttpContext().Request.Scheme}://{_user.GetHttpContext().Request.Host}"; -. Issuer nova
+      
+      var tokenDescriptor = new SecurityTokenDescriptor
+      {
+          Subject = identityClaims,
+          Issuer = currentUser,
+          Expires = DateTime.UtcNow.AddHours(1),/*expiração em 1hora vamos implementar refresh token */
+          SigningCredentials = key
+          //esse some 
+          // SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+      };
+
+      return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
+  }
+precisamos fazer que as apis reconhecem o token com as chaves publicas e privadas 
+
+site official 
+https://github.com/NetDevPack/Security.Jwt
+
+NetDevPack.Security.JwtExtensions
+
+para usar o jwt 
+
+var appSettings = configuration.GetSection("AppSettings");
+builder.Services.Configure<AppSettings>(appSettings);
+var appSettingsValues = appSettings.Get<AppSettings>();
+
+// JWT Setup
+
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = true;
+    x.SaveToken = true;
+    x.SetJwksOptions(new JwkOptions(appSettingsValues.AutenticacaoJwksUrl));
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    var defaultAuthorizationPolicyBuilder = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme);
+    defaultAuthorizationPolicyBuilder = defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
+    options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
+});
+
+agora vamos fazer o refresh token 
+
+o refresh token armazena no cookie no caso do mvc das spas guarda no 
+
+o refresh token é armazenado 
+
+  [HttpPost("refresh-token")]
+  [ClaimsAuthorize("UsersAdm", "1")]
+  public async Task<IActionResult> GetRefreshToken([FromBody] string guid)
+  {
+      if (!Guid.TryParse(guid,out var guidOut) )
+      {
+          AddError(new LNotification { Message = "Refresh Token Inválido" });
+          return Response(null);
+      }
+
+      var refreshToken =  await GetRefreshToken(guidOut);
+
+      if (refreshToken is null)
+      {
+          AddError(new LNotification { Message = "Refresh Token Expirado" });
+          return Response(null);
+      }
+      return await ExecControllerAsync( async () => await  GenerateJwt(guid));
+  }
+
+          async Task<RefreshToken> GenerateRefreshToken(string email)
+        {
+            var refreshToken = new
+                    RefreshToken()
+            {
+                UserName = email,
+                ExpirationDate = DateTime.Now.AddHours(_appTokenSettings.RefreshTokenExpiration)
+            };
+
+            _applicationUserContext.RefreshTokens.RemoveRange(_applicationUserContext.RefreshTokens.Where(x => x.UserName == email));
+            await _applicationUserContext.RefreshTokens.AddAsync(refreshToken);
+            await _applicationUserContext.SaveChangesAsync();
+            return refreshToken;
+
+        }
+
+                async Task<UserLoginDto> GenerateJwt(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            var claims = await _userManager.GetClaimsAsync(user);
+
+            var listClains = await GetClaimsUser(claims, user);
+            var encodedToken = GenerateJwt(roles: new List<string>(), addclaims: listClains.ToList(), user.Id, user.Email);
+            var refreshToken = await GenerateRefreshToken(email);
+            return GetResponseToken(await encodedToken, user, claims, refreshToken.Token);
+        }
+
+                UserLoginDto GetResponseToken(string encodedToken, IdentityUser user, IEnumerable<Claim> claims, Guid refreshToken)
+        {
+            return new UserLoginDto
+            {
+                RefreshToken = refreshToken,
+                AccessToken = encodedToken,
+                ExpiresIn = TimeSpan.FromHours(1).TotalSeconds,
+                UserToken = new UserTokenDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Claims = claims.Select(c => new UserClaimDto { Type = c.Type, Value = c.Value })
+                }
+            };
+        }
+
+
+        depois temos que implementar nas aplicações de front end 
+
+        teoricamente salva o refresh token no cookie que é um guid e passa o refreshToken quando expirar e renova o token 
+
+        agora veremos a comunicação via fila 
+
+        sending 
+
+
+        using System.Text;
+using RabbitMQ.Client;
+
+var factory = new ConnectionFactory { HostName = "localhost" };
+using var connection = factory.CreateConnection();
+using var channel = connection.CreateModel();
+
+channel.QueueDeclare(queue: "hello",
+                     durable: false,
+                     exclusive: false,
+                     autoDelete: false,
+                     arguments: null);
+
+const string message = "Hello World!";
+var body = Encoding.UTF8.GetBytes(message);
+
+channel.BasicPublish(exchange: string.Empty,
+                     routingKey: "hello",
+                     basicProperties: null,
+                     body: body);
+Console.WriteLine($" [x] Sent {message}");
+
+Console.WriteLine(" Press [enter] to exit.");
+Console.ReadLine();
+
+
+receive 
+
+
+using System.Text;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+
+var factory = new ConnectionFactory { HostName = "localhost" };
+using var connection = factory.CreateConnection();
+using var channel = connection.CreateModel();
+
+channel.QueueDeclare(queue: "hello",
+                     durable: false,
+                     exclusive: false,
+                     autoDelete: false,
+                     arguments: null);
+
+Console.WriteLine(" [*] Waiting for messages.");
+
+var consumer = new EventingBasicConsumer(channel);
+consumer.Received += (model, ea) =>
+{
+    var body = ea.Body.ToArray();
+    var message = Encoding.UTF8.GetString(body);
+    Console.WriteLine($" [x] Received {message}");
+};
+channel.BasicConsume(queue: "hello",
+                     autoAck: true,
+                     consumer: consumer);
+
+Console.WriteLine(" Press [enter] to exit.");
+Console.ReadLine(); 
+
+site 
+https://rabbitmq.com/getstarted.html
+
+channel.BasicPublish o cara que publica
+channel.BasicConsume o cara que da aceite na mensagem 
+
+RabbitMQ Round Robin Pattern C# .Net Core e Workers
+
+é automático para o rabbit mq
+
+como funciona os chanels 
+
+cada coneccao tem um ou mais chanels e um chanel tem uma coneccao
+
+dois produtores não podem ficar no mesmo chanel 
+
+o publicador deve ter um chanel unico o consumidor pode ter varios no mesmo chanel
+
+ _channel.BasicConsume(queue: propsMessageQueeDto.Queue,
+                      autoAck: false, -> boas praticas deixar sempre pra false para mandar a msg de volta pra fila se necessitar 
+                      consumer: consumer);
+
+       public void SubscribeAsync<T>(PropsMessageQueeDto propsMessageQueeDto, Func<T, Task> onMessage) where T : class
+       {
+           TryConnect();
+           SetQueue(propsMessageQueeDto);
+
+           _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+           var consumer = new EventingBasicConsumer(_channel);
+           consumer.Received += (sender, ea) =>
+           {
+               try
+               {
+                   var body = ea.Body.ToArray();
+                   var message = Encoding.UTF8.GetString(body);
+                   var input = JsonConvert.DeserializeObject<T>(message);
+                   onMessage.Invoke(input).Wait();
+
+                   // Note: it is possible to access the channel via
+                   //       ((EventingBasicConsumer)sender).Model here
+                   _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+               }
+               catch (Exception ex)
+               {
+                   /*recolocar na fila caso de erro */
+                   _channel.BasicNack(deliveryTag: ea.DeliveryTag,multiple: false,requeue: true);
+               }
+             
+           };
+           _channel.BasicConsume(queue: propsMessageQueeDto.Queue,
+                                autoAck: false,
+                                consumer: consumer);
+       }
+
+       vamos falar de prefetch
+
+       o prefetch limita o buffear a não enviar as mensagens 
+       prefetchCount: 1 -> manda um por um no buffer ocorrendo o balanceamento de acordo com o numero de consumidores
+       _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+       Exchange/Fanout
+
+       existem 4 tipos de exchange 
+        fanout 
+        direct 
+        topic 
+        headers 
+
+
+       faz cópia da mesma mensagem para outras filas 
+
+       produtor bate exchange nao na fila 
+       aqui temos duas filas onde criamos um exchange do tipo fanout que vai copiar a msg e amarramos a fila ao exchange  chanel.QueueBind
+                chanel.QueueDeclare(queue: "order",
+                                               durable: false,
+                                               exclusive: false,
+                                               autoDelete: false,
+                                               arguments: null);
+                chanel.QueueDeclare(queue: "logs",
+                               durable: false,
+                               exclusive: false,
+                               autoDelete: false,
+                               arguments: null);
+                chanel.ExchangeDeclare(exchange:"order",type: "fanout");
+                chanel.QueueBind(queue: "order", exchange: "order", routingKey: "");
+                chanel.QueueBind(queue: "logs", exchange: "order", routingKey: "");
+
+                _channel.BasicPublish(exchange: "order", -> aqui passamos o exchange
+                     routingKey: propsMessageQueeDto.Queue,
+                     basicProperties: properties,
+                     body: body);
+
+Exchange Direct 
+
+
+
+
+Dead Letter Strategy -> resolver mensagens de Nack para não entrar em looop 
+
+
+        IDictionary<string, object> DeadLetterQuee(IModel? channel, IDictionary<string, object> args)
+        {
+
+            channel?.ExchangeDeclare("DeadLetterExchange", ExchangeType.Fanout);
+            channel?.QueueDeclare("DeadLetterQuee", durable: true, exclusive: false, autoDelete: false, null);
+            channel?.QueueBind("DeadLetterQuee", "DeadLetterExchange", "");
+
+            var arguments = new Dictionary<string, object>
+            {
+
+                {"x-dead-letter-exchange","DeadLetterExchange" }
+
+            };
+
+            foreach (var arg in args)
+                arguments.Add(arg.Key, arg.Value);
+            return arguments;
+        }
+
+        é definido uma deadletter onde tanto na mensagem de publicação quanto na mensagem de listener 
+
+        associamos nos paramns as regras 
+
+        publish 
+
+         public void Publish<T>(T message
+                                 , PropsMessageQueeDto propsMessageQueeDto) where T : IntegrationEvent
+ {
+     TryConnect();
+
+
+     var messageSend = JsonConvert.SerializeObject(message);
+     var body = Encoding.UTF8.GetBytes(messageSend);
+
+     using (var chanel = _connection.CreateModel())
+     {
+         var args = DeadLetterQuee(chanel, propsMessageQueeDto.Arguments);
+
+         chanel.QueueDeclare(queue: propsMessageQueeDto.Queue,
+                                        durable: propsMessageQueeDto.Durable,
+                                        exclusive: propsMessageQueeDto.Exclusive,
+                                        autoDelete: propsMessageQueeDto.AutoDelete,
+                                        arguments: args);
+
+         var properties = chanel.CreateBasicProperties();
+         properties.Persistent = true;
+
+         chanel.BasicPublish(exchange: "",
+                              routingKey: propsMessageQueeDto.Queue,
+                              basicProperties: properties,
+                              body: body);
+     }
+ }
+
+ Subscribe
+
+  public void SubscribeAsync<T>(PropsMessageQueeDto propsMessageQueeDto,
+                               Func<T, Task> onMessage) where T : class
+ {
+      TryConnect();
+      var args =  DeadLetterQuee(_channel, propsMessageQueeDto.Arguments);
+     _channel.QueueDeclare(queue: propsMessageQueeDto.Queue,
+                                          durable: propsMessageQueeDto.Durable,
+                                          exclusive: propsMessageQueeDto.Exclusive,
+                                          autoDelete: propsMessageQueeDto.AutoDelete,
+                                          arguments: args);
+
+     _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+     var consumer = new EventingBasicConsumer(_channel);
+     consumer.Received += (sender, ea) =>
+     {
+         try
+         {
+             var body = ea.Body.ToArray();
+             var message = Encoding.UTF8.GetString(body);
+             var input = JsonConvert.DeserializeObject<T>(message);
+             onMessage.Invoke(input).Wait();
+
+             // Note: it is possible to access the channel via
+             //       ((EventingBasicConsumer)sender).Model here
+             _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+         }
+         catch (Exception ex)
+         {
+             //_channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
+             /*não dá reentrada na fila pois tem tratamento de fila no DeadLetterQuee Quee */
+             _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
+         }
+
+     };
+     _channel.BasicConsume(queue: propsMessageQueeDto.Queue,
+                          autoAck: false,
+                          consumer: consumer);
+ }
+
+
+
+
+
+TTL -> definir timeout para mensagem sair da fila 
+
+
+
+
+Message Durable Queue
+
+chanel.QueueDeclare(queue: propsMessageQueeDto.Queue,
+                               durable: true, -> deixar como duravel 
+                               exclusive: propsMessageQueeDto.Exclusive,
+                               autoDelete: propsMessageQueeDto.AutoDelete,
+                               arguments: propsMessageQueeDto.Arguments);
+
+
+                                var properties = chanel.CreateBasicProperties();
+ properties.Persistent = true; -> para manter a msg mesmo se o servidor cair
+
+ chanel.BasicPublish(exchange: "",
+                      routingKey: propsMessageQueeDto.Queue,
+                      basicProperties: properties,
+                      body: body);
+
+
+RPC o brabo
+temos o replay quee para saber qual fila temos que enviar e o correlation id que irá identificar a mensagem a ser devolvida 
+
+e finalmente vamos criar a fila no docker 
+
+com a nossa rede 
+
+esquerda sempre as portas externas
+
+docker run -d --name lojas-mel-fila --network=lojas-mel-network -p 5673:5672 -p 15673:15672 rabbitmq:3-management
+
+
+api gatweway delegate handler 
+para interceptar http e atachar o token 
+
+ public class HttpClientAuthorizationDelegatingHandler : DelegatingHandler
+ {
+     private readonly IUser _user;
+
+     public HttpClientAuthorizationDelegatingHandler(IUser user)
+     {
+         _user = user;
+     }
+
+     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+     {
+         var authorizationHeader = _user.GetHttpContext().Request.Headers["Authorization"];
+
+         if (!string.IsNullOrEmpty(authorizationHeader))
+         {
+             request.Headers.Add("Authorization", new List<string>() { authorizationHeader });
+         }
+
+         var token = _user.GetUserToken();
+
+         if (token != null)
+         {
+             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+         }
+
+         return base.SendAsync(request, cancellationToken);
+     }
+ }
+
+depois adiciona ela 
+
+
+            services.AddTransient<HttpClientAuthorizationDelegatingHandler>();
+
+            //
+
+            services.AddHttpClient<ICustomerService, CustomerService>(opt =>
+            {
+                opt.BaseAddress = new Uri(configuration.GetSection("AppSettings:CustomerApiUrl").Value);
+            })
+                .ConfigureHttpMessageHandlerBuilder(b =>
+                {
+                    b.PrimaryHandler = new HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback
+                                = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                    };
+                })
+              .AddHttpMessageHandler<HttpClientAuthorizationDelegatingHandler>()
+              .AddPolicyHandler(PollyExtensions.PollyWaitAndRetryAsync())
+              .AddTransientHttpErrorPolicy(
+                 p => p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
+
+
+retry partner com polly 
+
+    polly aplica retry e circut breaker 
+    https://github.com/App-vNext/Polly
+
+namespace buildingBlocksServices.Models
+{
+    public static class PollyExtensions
+    {
+        public static AsyncRetryPolicy<HttpResponseMessage> PollyWaitAndRetryAsync()
+        {
+            var retry = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .WaitAndRetryAsync(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(5),
+                    TimeSpan.FromSeconds(10),
+                }, (outcome, timespan, retryCount, context) =>
+                {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine($"Tentando pela {retryCount} vez!");
+                    Console.ForegroundColor = ConsoleColor.White;
+                });
+
+            return retry;
+        }
+    }
+}
+
+aqui tenta tres vezes com intervalos de 1 5 e 10 segundos 
+
+hadler error pega todos os requests de error e timeout
+
+circuit breaker 
+
+CircuitBreakerPolicy breaker = Policy
+  .Handle<HttpRequestException>()
+  .CircuitBreaker(
+    exceptionsAllowedBeforeBreaking: 2,
+    durationOfBreak: TimeSpan.FromMinutes(1)
+  );
+apos duas tentativar para e fica 1 minuto sem tentar
+
+circuit breaker fechado ok 
+
+circuito aberto problemas 
+
+o circuit breaker fica aberto ele conta o numero de excessoes para ser iniciado e vale para todas as instancias 
+
+
+
+
+
+

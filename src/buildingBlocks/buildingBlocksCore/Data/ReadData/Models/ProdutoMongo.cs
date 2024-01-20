@@ -1,0 +1,19 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace buildingBlocksCore.Data.ReadData.Models
+{
+    public class ProdutoMongo : BaseMongo
+    {
+        public string Descricao { get; set; }
+
+        public ProdutoMongo()
+        {
+            TableName = "produto";
+        }
+
+    }
+}
