@@ -84,7 +84,7 @@ namespace customerApi.Application.Commands
         {
             var res = new ResponseCommad<object>();
             var customerSearch = (await _customerRepository._repositoryConsult
-                                                           .SearchAsync(x => x.Id == request.Id))?
+                                                           .SearchAsync(x => x.Id.ToString() == request.Id.ToString().ToLower()))?
                                                            .FirstOrDefault();
 
             if (customerSearch != null)
@@ -95,7 +95,7 @@ namespace customerApi.Application.Commands
                     customerSearch.UserDeletedId = request.UserDeleteId;
                 else
                     customerSearch.UserDeletedId = _user.GetUserId();
-
+                customerSearch.Active = false;
             }
             await _customerRepository.unitOfWork.CommitAsync();
             return res;

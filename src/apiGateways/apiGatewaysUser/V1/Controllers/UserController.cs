@@ -28,7 +28,7 @@ namespace apiGatewaysUser.V1.Controllers
 
         /**/
 
-        [HttpPut]
+        [HttpGet("list-users")]
         [ClaimsAuthorize("UsersAdm", "1")]
         public async Task<IActionResult> Get([FromQuery] UserListRequest userListRequest)
         {
@@ -55,7 +55,7 @@ namespace apiGatewaysUser.V1.Controllers
 
         }
 
-        [HttpDelete("id:guid")]
+        [HttpDelete("{id:guid}")]
         [ClaimsAuthorize("UsersAdm", "1")]
         public async Task<IActionResult> Delete([FromRoute] Guid id)
         {

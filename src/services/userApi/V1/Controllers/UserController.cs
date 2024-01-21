@@ -100,7 +100,7 @@ namespace userApi.V1.Controllers
         }
 
 
-        [HttpDelete("deletar-conta/id:guid")]
+        [HttpDelete("deletar-conta/{id:guid}")]
         [ClaimsAuthorize("UsersAdm", "1")]
         public async Task<IActionResult> DeleteAccount([FromRoute] Guid id)
         {
@@ -198,7 +198,7 @@ namespace userApi.V1.Controllers
                             CPF = userRegister.CPF,
                             Email = userRegister.Email,
                             Nome = userRegister.Name,
-                            UserId = new Guid(user.Id),
+                            UserId = new Guid(user.Id.ToLower()),
                             UserInserted = _user.GetUserId()
 
                         }, new buildingBlocksMessageBus.Models.PropsMessageQueeDto { Queue = "RPCUserInserted", Durable = false });

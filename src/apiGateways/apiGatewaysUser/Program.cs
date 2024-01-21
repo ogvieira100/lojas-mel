@@ -12,6 +12,9 @@ using NetDevPack.Security.JwtExtensions;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using buildingBlocksCore.IoC;
+using buildingBlocksCore.Mediator;
+using buildingBlocksCore.Data.PersistData.Context;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -129,7 +132,9 @@ DataBootstrap
 
 
 //
-
+// Add services to the container.
+builder.Services.AddScoped<IMediatorHandler, MediatorHandler>();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
 builder.Services.AddHttpClient<ICustomerService, CustomerService>(opt =>
 {
@@ -163,6 +168,20 @@ p => p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 var appSettings = configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettings);
 var appSettingsValues = appSettings.Get<AppSettings>();
+
+
+#region  " Sql "
+
+var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<ApplicationContext>(options =>
+     options.UseSqlServer(connectionString)
+     .EnableSensitiveDataLogging()
+     .UseLazyLoadingProxies()
+     );
+
+
+#endregion
 
 // JWT Setup
 

@@ -31,7 +31,7 @@ namespace apiGatewaysUser.Services
             var responseLogin = await _httpClient.DeleteAsync($"api/v1/user/deletar-conta/{id}");
             await TreatErrorsResponse<object>(responseLogin);
            
-            return null;
+            return  new BaseResponseApi<object>();
         }
 
         public async Task<BaseResponseApi<UserLoginDto>> LoginAsync(UserLoginRequest userLoginRequest)
