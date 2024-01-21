@@ -38,7 +38,7 @@ namespace apiGatewaysUser.Services
 
             var httpContent = GetContentJsonUTF8(updateUserRequest);
             var responseLogin = await _httpClient.PutAsync($"api/v1/customer", httpContent);
-            await TreatErrorsResponse< BaseResponseApi<UpdateUserResponse>>(responseLogin);
+            await TreatErrorsResponse<BaseResponseApi<UpdateUserResponse>>(responseLogin);
             if (_notification.Any())
                 return null;
             return (await DeserializeObjResponse<BaseResponseApi<UpdateUserResponse>>(responseLogin));

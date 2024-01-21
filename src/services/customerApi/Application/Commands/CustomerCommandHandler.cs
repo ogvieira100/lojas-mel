@@ -73,7 +73,7 @@ namespace customerApi.Application.Commands
                 customerSearch.UserUpdatedId = _user.GetUserAdm();
                 customerSearch.Nome = request.Nome;
                 customerSearch.Email = request.Email;
-                customerSearch.CPF = request.CPF;   
+                customerSearch.CPF = request.CPF.OnlyNumbers();   
             }
             await _customerRepository.unitOfWork.CommitAsync();
             return res;
