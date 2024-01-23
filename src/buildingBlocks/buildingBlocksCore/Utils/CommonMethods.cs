@@ -15,6 +15,8 @@ namespace buildingBlocksCore.Utils
     public class CommonMethods
     {
 
+        public static bool EValidoEnum<T>(int value) where T : Enum => Enum.IsDefined(typeof(T), value);
+        
 
         #region " Strings "
 

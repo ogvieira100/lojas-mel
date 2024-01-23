@@ -13,6 +13,8 @@ namespace buildingBlocksCore.Utils
 
 
     {
+        public static bool EValidoEnum<T>(this int value) where T : Enum => CommonMethods.EValidoEnum<T>(value);
+
 
         public static Expression<Func<T, bool>> AndAlso<T>(this Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
         {

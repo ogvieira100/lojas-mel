@@ -17,12 +17,14 @@ namespace customerApi.Application.Commands
         readonly IBaseRepository<Cliente> _customerRepository;
         readonly IMapper _mapper;
         readonly IUser _user;
-        public CustomerCommandHandler(IBaseRepository<Cliente> customerRepository,
+        readonly LNotifications _notifications;
+        public CustomerCommandHandler(LNotifications notifications,IBaseRepository<Cliente> customerRepository,
             IUser user,
             IMapper mapper)
         {
             _mapper = mapper;
-            _user = user;   
+            _user = user;
+            _notifications = notifications; 
             _customerRepository = customerRepository; 
         }
         public async Task<ResponseCommad<InsertCustomerResponseCommad>> Handle(InsertCustomerCommand request, CancellationToken cancellationToken)
