@@ -16,6 +16,7 @@ namespace buildingBlocksCore.Data.ReadData.Repository
             IRepositoryConsultMongo<ClientesMongo> _baseConsultRepositoryMongo) : base(mongoContext, _baseConsultRepositoryMongo)
         {
 
+            
 
         }
     }

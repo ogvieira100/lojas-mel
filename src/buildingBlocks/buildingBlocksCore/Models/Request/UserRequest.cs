@@ -53,7 +53,7 @@ namespace buildingBlocksCore.Models.Request
 
     public class UserListRequest : PagedDataRequest
     {
-        public string Name { get; set; }
+        public string Nome { get; set; } = "";  
 
     }
     public class UserLoginRequest

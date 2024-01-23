@@ -80,7 +80,7 @@ builder.Services.AddSwaggerGen(option =>
 
     option.SwaggerDoc("v1", new OpenApiInfo()
     {
-        Title = "Lojas Mel Api Gateway Customer",
+        Title = "Lojas Mel Api Customer",
         Description = "Esta API é uma Enterprise Applications.",
         Contact = new OpenApiContact() { Name = "Osmar Gonçalves Vieira", Email = "osmargv100@gmail.com" },
         License = new OpenApiLicense() { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }

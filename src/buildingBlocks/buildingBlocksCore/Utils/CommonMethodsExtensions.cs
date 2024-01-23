@@ -5,11 +5,20 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml;
+using System.Linq.Expressions;
 
 namespace buildingBlocksCore.Utils
 {
     public static class CommonMethodsExtensions
+
+
     {
+
+        public static Expression<Func<T, bool>> AndAlso<T>(this Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
+        {
+            var body = Expression.AndAlso(left.Body, right.Body);
+            return Expression.Lambda<Func<T, bool>>(body, left.Parameters);
+        }
         #region " String "
 
         public static string GetQueryString<T>(this T obj, bool usingEncode = false, IEnumerable<string> propsExcluded = null) where T : class => CommonMethods.GetQueryString(obj, usingEncode, propsExcluded);

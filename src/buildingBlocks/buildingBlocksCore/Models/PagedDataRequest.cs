@@ -11,7 +11,7 @@ namespace buildingBlocksCore.Models
         public int Page { get; set; }
         public int Limit { get; set; }
         public bool? Active { get; set; }
-        public string Column { get; set; }
+        public string Column { get; set; } = "";
         public bool Desc { get; set; }
 
 
