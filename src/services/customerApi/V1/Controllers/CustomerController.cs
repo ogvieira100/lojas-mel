@@ -6,7 +6,7 @@ using buildingBlocksCore.Models.Dto;
 using buildingBlocksCore.Models.Request;
 using buildingBlocksCore.Utils;
 using buildingBlocksServices.Controllers;
-using customerApi.Application.Commands;
+using customerApi.Application.Commands.Customer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

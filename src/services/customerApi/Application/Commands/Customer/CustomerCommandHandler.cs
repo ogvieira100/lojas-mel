@@ -6,9 +6,12 @@ using buildingBlocksCore.Mediator;
 using buildingBlocksCore.Mediator.Messages;
 using buildingBlocksCore.Models;
 using buildingBlocksCore.Utils;
+using buildingBlocksCore.Validations.Extension;
+using customerApi.Application.Commands.Enderecos;
+using FluentValidation;
 using MediatR;
 
-namespace customerApi.Application.Commands
+namespace customerApi.Application.Commands.Customer
 {
     public class CustomerCommandHandler :
         IRequestHandler<InsertCustomerCommand, ResponseCommad<InsertCustomerResponseCommad>>,
@@ -20,21 +23,42 @@ namespace customerApi.Application.Commands
         readonly IUser _user;
         readonly LNotifications _notifications;
         readonly IMediatorHandler _mediatorHandler;
-        public CustomerCommandHandler(IMediatorHandler mediatorHandler, LNotifications notifications,IBaseRepository<Cliente> customerRepository,
+        readonly IValidator<InsertCustomerCommand> _validatorInsertCustomerCommand;
+        readonly IValidator<UpdateCustomerCommand> _validatorUpdateCustomerCommand;
+
+        public CustomerCommandHandler(IMediatorHandler mediatorHandler, 
+                                     LNotifications notifications,
+                                     IValidator<InsertCustomerCommand> validatorInsertCustomerCommand,
+                                     IValidator<UpdateCustomerCommand> validatorUpdateCustomerCommand, 
+                                     IBaseRepository<Cliente> customerRepository,
             IUser user,
             IMapper mapper)
         {
             _mapper = mapper;
             _user = user;
-            _mediatorHandler = mediatorHandler; 
-            _notifications = notifications; 
-            _customerRepository = customerRepository; 
+            _validatorInsertCustomerCommand = validatorInsertCustomerCommand;   
+            _mediatorHandler = mediatorHandler;
+            _notifications = notifications;
+            _validatorUpdateCustomerCommand = validatorUpdateCustomerCommand;   
+            _customerRepository = customerRepository;
         }
-        public async Task<ResponseCommad<InsertCustomerResponseCommad>> Handle(InsertCustomerCommand request, 
+        public async Task<ResponseCommad<InsertCustomerResponseCommad>> Handle(InsertCustomerCommand request,
             CancellationToken cancellationToken)
         {
             var res = new ResponseCommad<InsertCustomerResponseCommad>();
-            res.Response = new InsertCustomerResponseCommad();  
+            res.Response = new InsertCustomerResponseCommad();
+
+            var validation = await _validatorInsertCustomerCommand.ValidateAsync(request);
+
+            if (!validation.IsValid)
+                _notifications.AddRange(validation.GetErrors().Select(x => new LNotification
+                {
+                    Message = x.ErrorMessage
+                }));
+
+            if (_notifications.Any())
+                return res;
+
 
             var customerCPF = (await _customerRepository._repositoryConsult.SearchAsync(x => x.CPF == request.CPF.OnlyNumbers()))?.FirstOrDefault();
             if (customerCPF != null)
@@ -47,27 +71,40 @@ namespace customerApi.Application.Commands
             customerSave.SetId(request.Id);
             if (request.UserInsertedId != null)
                 customerSave.UserInsertedId = request.UserInsertedId.Value;
-            else 
+            else
                 customerSave.UserInsertedId = _user.GetUserId();
             customerSave.DateRegister = DateTime.Now;
             await _customerRepository.AddAsync(customerSave);
             /**/
             foreach (var item in request.InsertEnderecos)
             {
-                var endInsert =  await _mediatorHandler.SendCommand<InsertEnderecoCommand, InsertEnderecoResponseCommand>(item);
+                var endInsert = await _mediatorHandler.SendCommand<InsertEnderecoCommand, InsertEnderecoResponseCommand>(item);
                 if (endInsert.Response?.Endereco is not null)
                     customerSave.Enderecos.Add(endInsert.Response.Endereco);
             }
             if (!_notifications.Any())
-              await _customerRepository.unitOfWork.CommitAsync();
+                await _customerRepository.unitOfWork.CommitAsync();
+            else
+                res.Notifications.AddRange(_notifications);
 
-            res.Response.Id = customerSave.Id;   
+            res.Response.Id = customerSave.Id;
             return res;
         }
 
         public async Task<ResponseCommad<object>> Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
         {
             var res = new ResponseCommad<object>();
+            var validation = await _validatorUpdateCustomerCommand.ValidateAsync(request);
+
+            if (!validation.IsValid)
+                _notifications.AddRange(validation.GetErrors().Select(x => new LNotification
+                {
+                    Message = x.ErrorMessage
+                }));
+
+            if (_notifications.Any())
+                return res;
+
             var customerCPF = (await _customerRepository._repositoryConsult.SearchAsync(x => x.Id != request.Id
                                                                                   && x.CPF == request.CPF.OnlyNumbers()))
                                                                                   ?.FirstOrDefault();
@@ -87,7 +124,7 @@ namespace customerApi.Application.Commands
                 customerSearch.UserUpdatedId = _user.GetUserAdm();
                 customerSearch.Nome = request.Nome;
                 customerSearch.Email = request.Email;
-                customerSearch.CPF = request.CPF.OnlyNumbers();   
+                customerSearch.CPF = request.CPF.OnlyNumbers();
             }
             /**/
             foreach (var item in request.InsertEnderecos)
@@ -98,9 +135,11 @@ namespace customerApi.Application.Commands
             }
             foreach (var item in request.UpdateEnderecos)
                 await _mediatorHandler.SendCommand<UpdateEnderecoCommand, object>(item);
-            
+
             if (!_notifications.Any())
                 await _customerRepository.unitOfWork.CommitAsync();
+            else
+                res.Notifications.AddRange(_notifications);
             return res;
 
         }

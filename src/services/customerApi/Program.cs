@@ -9,7 +9,7 @@ using buildingBlocksCore.Utils;
 using buildingBlocksCore.Validations.Extension;
 using buildingBlocksMessageBus.Interfaces;
 using buildingBlocksMessageBus.Models;
-using customerApi.Application.Commands;
+using customerApi.Application.Commands.Validation;
 using customerApi.Automapper;
 using customerApi.Model;
 using customerApi.Services;
@@ -186,6 +186,8 @@ builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 builder.Services.AddFluentValidation(typeof(InsertEnderecoCommandValidator));
 builder.Services.AddFluentValidation(typeof(UpdateEnderecoCommandValidator));
+builder.Services.AddFluentValidation(typeof(UpdateCustomerCommandValidation));
+builder.Services.AddFluentValidation(typeof(InsertCustomerCommandValidation));
 // 
 
 var app = builder.Build();

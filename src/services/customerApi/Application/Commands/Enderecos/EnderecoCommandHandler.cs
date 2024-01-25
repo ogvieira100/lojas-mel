@@ -9,7 +9,7 @@ using FluentValidation;
 using MediatR;
 using System.Collections.Generic;
 
-namespace customerApi.Application.Commands
+namespace customerApi.Application.Commands.Enderecos
 {
     public class EnderecoCommandHandler :
         IRequestHandler<InsertEnderecoCommand, ResponseCommad<InsertEnderecoResponseCommand>>,
@@ -95,7 +95,7 @@ namespace customerApi.Application.Commands
             {
                 endUpdate.UserDeletedId = _user.GetUserId();
                 endUpdate.Active = false;
-                endUpdate.DeleteDate = DateTime.Now; 
+                endUpdate.DeleteDate = DateTime.Now;
             }
             return respCommand;
         }

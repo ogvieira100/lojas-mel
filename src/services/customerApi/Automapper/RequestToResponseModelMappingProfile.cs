@@ -2,7 +2,7 @@
 using buildingBlocksCore.Models;
 using buildingBlocksCore.Utils;
 using Castle.Core.Resource;
-using customerApi.Application.Commands;
+using customerApi.Application.Commands.Customer;
 
 namespace customerApi.Automapper
 {

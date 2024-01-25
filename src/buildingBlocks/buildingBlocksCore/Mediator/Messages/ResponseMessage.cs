@@ -11,6 +11,7 @@ namespace buildingBlocksCore.Mediator.Messages
     {
         public LNotifications Notifications { get; set; }
 
+        public string SerializableResponse { get; set; }
         public ResponseMessage()
         {
                 Notifications = new LNotifications();    

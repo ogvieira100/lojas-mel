@@ -1,4 +1,4 @@
-﻿namespace customerApi.Application.Commands
+﻿namespace customerApi.Application.Commands.Customer
 {
     public class UpdateCustomerResponseCommand
     {

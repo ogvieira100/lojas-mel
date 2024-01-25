@@ -3,7 +3,7 @@ using buildingBlocksCore.Mediator;
 using buildingBlocksCore.Mediator.Messages;
 using buildingBlocksCore.Mediator.Messages.Integration;
 using buildingBlocksMessageBus.Interfaces;
-using customerApi.Application.Commands;
+using customerApi.Application.Commands.Customer;
 
 namespace customerApi.Services
 {

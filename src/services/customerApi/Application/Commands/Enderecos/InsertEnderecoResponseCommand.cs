@@ -1,6 +1,6 @@
 ﻿using buildingBlocksCore.Models;
 
-namespace customerApi.Application.Commands
+namespace customerApi.Application.Commands.Enderecos
 {
     public class InsertEnderecoResponseCommand
     {

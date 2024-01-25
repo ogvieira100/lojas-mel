@@ -1,10 +1,10 @@
 ﻿using buildingBlocksCore.Mediator.Messages;
+using customerApi.Application.Commands.Enderecos;
 
-namespace customerApi.Application.Commands
+namespace customerApi.Application.Commands.Customer
 {
-    public class InsertCustomerCommand : Command<InsertCustomerResponseCommad>
+    public class UpdateCustomerCommand : Command<object>
     {
-        public Guid? UserInsertedId { get; set; }
         public Guid Id { get; set; }
         public string Nome { get; set; }
 
@@ -13,9 +13,13 @@ namespace customerApi.Application.Commands
         public string CPF { get; set; }
 
         public IEnumerable<InsertEnderecoCommand> InsertEnderecos { get; set; }
-        public InsertCustomerCommand()
+
+        public IEnumerable<UpdateEnderecoCommand> UpdateEnderecos { get; set; }
+
+        public UpdateCustomerCommand()
         {
             InsertEnderecos = new List<InsertEnderecoCommand>();
+            UpdateEnderecos = new List<UpdateEnderecoCommand>();
 
         }
     }

@@ -1,13 +1,18 @@
 ﻿using buildingBlocksCore.Models;
 using buildingBlocksCore.Utils;
+using customerApi.Application.Commands.Enderecos;
 using FluentValidation;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace customerApi.Application.Commands
+namespace customerApi.Application.Commands.Validation
 {
-    public class UpdateEnderecoCommandValidator : AbstractValidator<UpdateEnderecoCommand>
+    public class InsertEnderecoCommandValidator : AbstractValidator<InsertEnderecoCommand>
     {
-
-        public UpdateEnderecoCommandValidator()
+        public InsertEnderecoCommandValidator()
         {
             RuleFor(x => x.Estado)
                 .Must((uf) => ((int)uf).EValidoEnum<UF>())
@@ -25,13 +30,14 @@ namespace customerApi.Application.Commands
             RuleFor(x => x.Bairro)
                 .Length(3, 50)
                 .WithMessage($"Atenção o bairro deve estar entre 3 e 50 caracteres");
+
         }
 
         bool ValidarNumero(string Numero)
         => !string.IsNullOrEmpty(Numero)
            && Numero.Length <= 10;
 
-        
-            
+
+
     }
 }

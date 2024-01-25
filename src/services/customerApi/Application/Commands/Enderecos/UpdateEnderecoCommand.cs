@@ -1,10 +1,11 @@
 ﻿using buildingBlocksCore.Mediator.Messages;
 using buildingBlocksCore.Models;
 
-namespace customerApi.Application.Commands
+namespace customerApi.Application.Commands.Enderecos
 {
-    public class InsertEnderecoCommand : Command<InsertEnderecoResponseCommand>
+    public class UpdateEnderecoCommand : Command<object>
     {
+        public Guid Id { get; set; }
         public string Logradouro { get; set; }
         public string Numero { get; set; }
         public string Bairro { get; set; }

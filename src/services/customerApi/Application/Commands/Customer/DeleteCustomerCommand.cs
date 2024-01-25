@@ -1,6 +1,6 @@
 ﻿using buildingBlocksCore.Mediator.Messages;
 
-namespace customerApi.Application.Commands
+namespace customerApi.Application.Commands.Customer
 {
     public class DeleteCustomerCommand : Command<object>
     {
