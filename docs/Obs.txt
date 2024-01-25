@@ -685,6 +685,11 @@ depois adiciona ela
                  p => p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
 
+confirm messages RabbitMQ
+
+
+
+
 retry partner com polly 
 
     polly aplica retry e circut breaker 

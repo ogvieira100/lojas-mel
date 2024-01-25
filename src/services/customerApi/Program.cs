@@ -6,8 +6,10 @@ using buildingBlocksCore.Identity;
 using buildingBlocksCore.IoC;
 using buildingBlocksCore.Mediator;
 using buildingBlocksCore.Utils;
+using buildingBlocksCore.Validations.Extension;
 using buildingBlocksMessageBus.Interfaces;
 using buildingBlocksMessageBus.Models;
+using customerApi.Application.Commands;
 using customerApi.Automapper;
 using customerApi.Model;
 using customerApi.Services;
@@ -182,8 +184,9 @@ builder.Services.AddAutoMapper(typeof(RequestToResponseModelMappingProfile));
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 
-
-                               
+builder.Services.AddFluentValidation(typeof(InsertEnderecoCommandValidator));
+builder.Services.AddFluentValidation(typeof(UpdateEnderecoCommandValidator));
+// 
 
 var app = builder.Build();
 

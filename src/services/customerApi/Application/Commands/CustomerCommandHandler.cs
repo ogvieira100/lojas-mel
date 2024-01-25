@@ -2,6 +2,7 @@
 using buildingBlocksCore.Data.PersistData.Interfaces;
 using buildingBlocksCore.Data.PersistData.Uow;
 using buildingBlocksCore.Identity;
+using buildingBlocksCore.Mediator;
 using buildingBlocksCore.Mediator.Messages;
 using buildingBlocksCore.Models;
 using buildingBlocksCore.Utils;
@@ -18,16 +19,19 @@ namespace customerApi.Application.Commands
         readonly IMapper _mapper;
         readonly IUser _user;
         readonly LNotifications _notifications;
-        public CustomerCommandHandler(LNotifications notifications,IBaseRepository<Cliente> customerRepository,
+        readonly IMediatorHandler _mediatorHandler;
+        public CustomerCommandHandler(IMediatorHandler mediatorHandler, LNotifications notifications,IBaseRepository<Cliente> customerRepository,
             IUser user,
             IMapper mapper)
         {
             _mapper = mapper;
             _user = user;
+            _mediatorHandler = mediatorHandler; 
             _notifications = notifications; 
             _customerRepository = customerRepository; 
         }
-        public async Task<ResponseCommad<InsertCustomerResponseCommad>> Handle(InsertCustomerCommand request, CancellationToken cancellationToken)
+        public async Task<ResponseCommad<InsertCustomerResponseCommad>> Handle(InsertCustomerCommand request, 
+            CancellationToken cancellationToken)
         {
             var res = new ResponseCommad<InsertCustomerResponseCommad>();
             res.Response = new InsertCustomerResponseCommad();  
@@ -47,7 +51,16 @@ namespace customerApi.Application.Commands
                 customerSave.UserInsertedId = _user.GetUserId();
             customerSave.DateRegister = DateTime.Now;
             await _customerRepository.AddAsync(customerSave);
-            await _customerRepository.unitOfWork.CommitAsync();
+            /**/
+            foreach (var item in request.InsertEnderecos)
+            {
+                var endInsert =  await _mediatorHandler.SendCommand<InsertEnderecoCommand, InsertEnderecoResponseCommand>(item);
+                if (endInsert.Response?.Endereco is not null)
+                    customerSave.Enderecos.Add(endInsert.Response.Endereco);
+            }
+            if (!_notifications.Any())
+              await _customerRepository.unitOfWork.CommitAsync();
+
             res.Response.Id = customerSave.Id;   
             return res;
         }
@@ -70,14 +83,24 @@ namespace customerApi.Application.Commands
 
             if (customerSearch != null)
             {
-
                 customerSearch.DateUpdate = DateTime.Now;
                 customerSearch.UserUpdatedId = _user.GetUserAdm();
                 customerSearch.Nome = request.Nome;
                 customerSearch.Email = request.Email;
                 customerSearch.CPF = request.CPF.OnlyNumbers();   
             }
-            await _customerRepository.unitOfWork.CommitAsync();
+            /**/
+            foreach (var item in request.InsertEnderecos)
+            {
+                var endInsert = await _mediatorHandler.SendCommand<InsertEnderecoCommand, InsertEnderecoResponseCommand>(item);
+                if (endInsert.Response?.Endereco is not null)
+                    customerSearch.Enderecos.Add(endInsert.Response.Endereco);
+            }
+            foreach (var item in request.UpdateEnderecos)
+                await _mediatorHandler.SendCommand<UpdateEnderecoCommand, object>(item);
+            
+            if (!_notifications.Any())
+                await _customerRepository.unitOfWork.CommitAsync();
             return res;
 
         }

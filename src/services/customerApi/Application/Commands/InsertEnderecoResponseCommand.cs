@@ -1,7 +1,9 @@
-﻿namespace customerApi.Application.Commands
+﻿using buildingBlocksCore.Models;
+
+namespace customerApi.Application.Commands
 {
     public class InsertEnderecoResponseCommand
     {
-        public Guid Id { get; set; }
+        public Endereco Endereco { get; set; }
     }
 }

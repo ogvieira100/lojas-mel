@@ -12,5 +12,11 @@ namespace customerApi.Application.Commands
 
         public string CPF { get; set; }
 
+        public IEnumerable<InsertEnderecoCommand> InsertEnderecos { get; set; }
+        public InsertCustomerCommand()
+        {
+            InsertEnderecos = new List<InsertEnderecoCommand>();
+
+        }
     }
 }
