@@ -25,9 +25,11 @@ namespace customerApi.Application.Commands.Customer
         readonly IMediatorHandler _mediatorHandler;
         readonly IValidator<InsertCustomerCommand> _validatorInsertCustomerCommand;
         readonly IValidator<UpdateCustomerCommand> _validatorUpdateCustomerCommand;
+        readonly ILogger<CustomerCommandHandler> _logger;   
 
         public CustomerCommandHandler(IMediatorHandler mediatorHandler, 
                                      LNotifications notifications,
+                                     ILogger<CustomerCommandHandler> logger,
                                      IValidator<InsertCustomerCommand> validatorInsertCustomerCommand,
                                      IValidator<UpdateCustomerCommand> validatorUpdateCustomerCommand, 
                                      IBaseRepository<Cliente> customerRepository,
@@ -36,6 +38,7 @@ namespace customerApi.Application.Commands.Customer
         {
             _mapper = mapper;
             _user = user;
+            _logger =   logger;
             _validatorInsertCustomerCommand = validatorInsertCustomerCommand;   
             _mediatorHandler = mediatorHandler;
             _notifications = notifications;
@@ -45,6 +48,13 @@ namespace customerApi.Application.Commands.Customer
         public async Task<ResponseCommad<InsertCustomerResponseCommad>> Handle(InsertCustomerCommand request,
             CancellationToken cancellationToken)
         {
+            _logger.Logar(new LogClass {
+                    Aplicacao = Aplicacao.Customer,
+                    EstadoProcesso = EstadoProcesso.Processando,
+                    Msg = "Inserindo customer",
+                    ProcessoId = Guid.NewGuid(),    
+                    TipoLog = TipoLog.Informacao
+            });
             var res = new ResponseCommad<InsertCustomerResponseCommad>();
             res.Response = new InsertCustomerResponseCommad();
 

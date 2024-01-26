@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml;
 using System.Linq.Expressions;
+using Microsoft.Extensions.Logging;
 
 namespace buildingBlocksCore.Utils
 {
@@ -13,6 +14,9 @@ namespace buildingBlocksCore.Utils
 
 
     {
+
+        public static void Logar(this ILogger logger, LogClass logClass) => CommonMethods.Logar(logClass, logger);
+        
         public static bool EValidoEnum<T>(this int value) where T : Enum => CommonMethods.EValidoEnum<T>(value);
 
 

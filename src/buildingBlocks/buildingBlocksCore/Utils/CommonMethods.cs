@@ -9,14 +9,103 @@ using System.Web;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using System.Xml;
+using Microsoft.Extensions.Logging;
 
 namespace buildingBlocksCore.Utils
 {
+
+    public enum TipoLog 
+    {
+        Informacao = 1,
+        Erro = 2,
+        Alerta = 3
+    }
+
+    public enum EstadoProcesso
+    { 
+        Inicio = 1,
+        Processando  = 2,
+        Finalizando = 3,
+        Erro = 4
+    }
+
+    public enum Aplicacao
+    { 
+        Customer = 1,
+        Invoice = 2,
+        Order = 3,
+        User = 4,
+        Supplier = 5
+    }
+
+    public class LogClass {
+        public string Msg { get; set; }
+        public Guid ProcessoId { get; set; }
+        public TipoLog TipoLog { get; set; }
+        public Aplicacao Aplicacao { get; set; }
+        public EstadoProcesso EstadoProcesso { get; set; }
+        public IDictionary<string, string> Chaves { get; set; }
+    }
+
     public class CommonMethods
     {
 
+        #region " Logger "
+
+        public static void Logar(LogClass logClass, ILogger logger)
+        {
+            StringBuilder sb = new StringBuilder();
+            List<object> pars = new List<object>();
+            ObterInfoLog(logClass, sb, pars);
+            switch (logClass.TipoLog)
+            {
+                case TipoLog.Informacao:
+                    logger.LogInformation(sb.ToString(), pars);
+                    break;
+                case TipoLog.Erro:
+                    logger.LogError(sb.ToString(), pars);
+                    break;
+                case TipoLog.Alerta:
+                    logger.LogWarning(sb.ToString(), pars);
+                    break;
+                default:
+                    logger.LogInformation(sb.ToString(), pars);
+                    break;
+            }
+        }
+
+        static void ObterInfoLog(LogClass logClass,  StringBuilder sb,  List<object> pars)
+        {
+
+            string msgError = string.Empty;
+            if (!Enum.IsDefined(logClass.TipoLog))
+                msgError = "Atenção TipoLog inválido";
+            if (!Enum.IsDefined(logClass.Aplicacao))
+                msgError = "Atenção Aplicação inválida";
+            if (!Enum.IsDefined(logClass.EstadoProcesso))
+                msgError = "Atenção EstadoProcesso inválido";
+            if (!string.IsNullOrEmpty(msgError))
+                throw new Exception(msgError);  
+
+            sb.Append(logClass.Msg);
+            sb.Append("{ProcessoId}");
+            sb.Append("{TipoLog}");
+            sb.Append("{Aplicacao}");
+            sb.Append("{EstadoProcesso}");
+            foreach (var key in logClass.Chaves.Keys)
+                sb.Append("{" + key + "}");
+            pars = new List<object>();
+            pars.Add(logClass.ProcessoId);
+            pars.Add(logClass.TipoLog);
+            pars.Add(logClass.Aplicacao);
+            pars.Add(logClass.EstadoProcesso);
+            foreach (var value in logClass.Chaves.Values)
+                pars.Add(value);
+        }
+
+        #endregion
+
         public static bool EValidoEnum<T>(int value) where T : Enum => Enum.IsDefined(typeof(T), value);
-        
 
         #region " Strings "
 
