@@ -9,16 +9,20 @@ using buildingBlocksCore.Utils;
 using buildingBlocksCore.Validations.Extension;
 using buildingBlocksMessageBus.Interfaces;
 using buildingBlocksMessageBus.Models;
+using customerApi.Application.Commands.Customer;
+using customerApi.Application.Commands.Enderecos;
 using customerApi.Application.Commands.Validation;
 using customerApi.Automapper;
 using customerApi.Model;
 using customerApi.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using NetDevPack.Security.JwtExtensions;
+using System;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -184,10 +188,22 @@ builder.Services.AddAutoMapper(typeof(RequestToResponseModelMappingProfile));
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 
-builder.Services.AddFluentValidation(typeof(InsertEnderecoCommandValidator));
-builder.Services.AddFluentValidation(typeof(UpdateEnderecoCommandValidator));
-builder.Services.AddFluentValidation(typeof(UpdateCustomerCommandValidation));
-builder.Services.AddFluentValidation(typeof(InsertCustomerCommandValidation));
+builder.Services.AddScoped<IValidator<InsertEnderecoCommand>, InsertEnderecoCommandValidator>();
+builder.Services.AddScoped<IValidator<InsertCustomerCommand>, InsertCustomerCommandValidation>();
+builder.Services.AddScoped<IValidator<UpdateEnderecoCommand>, UpdateEnderecoCommandValidator>();
+builder.Services.AddScoped<IValidator<UpdateCustomerCommand>, UpdateCustomerCommandValidation>();
+
+//builder.Services.AddValidatorsFromAssemblyContaining<PersonValidator>();
+//builder.Services.AddFluentValidation(typeof(InsertEnderecoCommandValidator))
+//    .AddFluentValidation(typeof(InsertCustomerCommandValidation))
+//    .AddFluentValidation(typeof(UpdateEnderecoCommandValidator))
+//    .AddFluentValidation(typeof(UpdateCustomerCommandValidation))
+//    ;
+
+
+
+
+
 // 
 
 var app = builder.Build();

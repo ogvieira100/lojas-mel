@@ -12,9 +12,19 @@ namespace buildingBlocksCore.Validations.Extension
     {
         public static IServiceCollection AddFluentValidation(this IServiceCollection services, Type assemblyContainingValidators)
         {
-            services.AddFluentValidation(assemblyContainingValidators);
+            try
+            {
+                services.AddFluentValidation(assemblyContainingValidators);
 
-            return services;
+                return services;
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            
         }
 
         public static List<MessageResult>? GetErrors(this ValidationResult result)
