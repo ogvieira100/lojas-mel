@@ -1,4 +1,5 @@
-﻿using System;
+﻿using buildingBlocksCore.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
@@ -27,10 +28,11 @@ namespace buildingBlocksCore.Mediator.Messages.Integration
     public abstract class IntegrationEvent : Event
     {
 
-        public PositionEvent PositionEvent { get; set; }
-        public TypeProcess? TypeProcess { get; set; }
         public int Order { get; set; }
         public Guid UserId { get; set; }
+        public Guid ProcessoId { get; set; }
+        public Aplicacao Aplicacao { get; set; }
+        public EstadoProcesso EstadoProcesso { get; set; }
         public IntegrationEvent() : base()   
         {
                     

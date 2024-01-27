@@ -55,6 +55,8 @@ namespace customerApi.Application.Commands.Customer
                     ProcessoId = Guid.NewGuid(),    
                     TipoLog = TipoLog.Informacao
             });
+
+
             var res = new ResponseCommad<InsertCustomerResponseCommad>();
             res.Response = new InsertCustomerResponseCommad();
 

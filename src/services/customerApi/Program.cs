@@ -187,6 +187,7 @@ builder.Services.AddAutoMapper(typeof(RequestToResponseModelMappingProfile));
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
+builder.Services.AddLogging();
 
 builder.Services.AddScoped<IValidator<InsertEnderecoCommand>, InsertEnderecoCommandValidator>();
 builder.Services.AddScoped<IValidator<InsertCustomerCommand>, InsertCustomerCommandValidation>();
@@ -199,10 +200,6 @@ builder.Services.AddScoped<IValidator<UpdateCustomerCommand>, UpdateCustomerComm
 //    .AddFluentValidation(typeof(UpdateEnderecoCommandValidator))
 //    .AddFluentValidation(typeof(UpdateCustomerCommandValidation))
 //    ;
-
-
-
-
 
 // 
 

@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 namespace buildingBlocksCore.Utils
 {
 
-    public enum TipoLog 
+    public enum TipoLog
     {
         Informacao = 1,
         Erro = 2,
@@ -22,15 +22,16 @@ namespace buildingBlocksCore.Utils
     }
 
     public enum EstadoProcesso
-    { 
+    {
         Inicio = 1,
-        Processando  = 2,
+        Processando = 2,
         Finalizando = 3,
-        Erro = 4
+        Erro = 4,
+        EntradaDados = 5
     }
 
     public enum Aplicacao
-    { 
+    {
         Customer = 1,
         Invoice = 2,
         Order = 3,
@@ -38,13 +39,19 @@ namespace buildingBlocksCore.Utils
         Supplier = 5
     }
 
-    public class LogClass {
+    public class LogClass
+    {
         public string Msg { get; set; }
         public Guid ProcessoId { get; set; }
         public TipoLog TipoLog { get; set; }
         public Aplicacao Aplicacao { get; set; }
         public EstadoProcesso EstadoProcesso { get; set; }
         public IDictionary<string, string> Chaves { get; set; }
+
+        public LogClass()
+        {
+            Chaves = new Dictionary<string, string>();
+        }
     }
 
     public class CommonMethods
@@ -54,53 +61,71 @@ namespace buildingBlocksCore.Utils
 
         public static void Logar(LogClass logClass, ILogger logger)
         {
-            StringBuilder sb = new StringBuilder();
-            List<object> pars = new List<object>();
-            ObterInfoLog(logClass, sb, pars);
-            switch (logClass.TipoLog)
+            try
             {
-                case TipoLog.Informacao:
-                    logger.LogInformation(sb.ToString(), pars);
-                    break;
-                case TipoLog.Erro:
-                    logger.LogError(sb.ToString(), pars);
-                    break;
-                case TipoLog.Alerta:
-                    logger.LogWarning(sb.ToString(), pars);
-                    break;
-                default:
-                    logger.LogInformation(sb.ToString(), pars);
-                    break;
+                StringBuilder sb = new StringBuilder();
+                List<object> pars = new List<object>();
+                ObterInfoLog(logClass, sb, pars);
+                switch (logClass.TipoLog)
+                {
+                    case TipoLog.Informacao:
+                        logger.LogInformation(sb.ToString(), pars.ToArray());
+                        break;
+                    case TipoLog.Erro:
+                        logger.LogError(sb.ToString(), pars.ToArray());
+                        break;
+                    case TipoLog.Alerta:
+                        logger.LogWarning(sb.ToString(), pars.ToArray());
+                        break;
+                    default:
+                        logger.LogInformation(sb.ToString(), pars.ToArray());
+                        break;
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
             }
         }
 
-        static void ObterInfoLog(LogClass logClass,  StringBuilder sb,  List<object> pars)
+
+        static void ObterInfoLog(LogClass logClass, StringBuilder sb, List<object> pars)
         {
+            try
+            {
+                string msgError = string.Empty;
+                if (!Enum.IsDefined(logClass.TipoLog))
+                    msgError = "Atenção TipoLog inválido";
+                if (!Enum.IsDefined(logClass.Aplicacao))
+                    msgError = "Atenção Aplicação inválida";
+                if (!Enum.IsDefined(logClass.EstadoProcesso))
+                    msgError = "Atenção EstadoProcesso inválido";
+                if (!string.IsNullOrEmpty(msgError))
+                    throw new Exception(msgError);
 
-            string msgError = string.Empty;
-            if (!Enum.IsDefined(logClass.TipoLog))
-                msgError = "Atenção TipoLog inválido";
-            if (!Enum.IsDefined(logClass.Aplicacao))
-                msgError = "Atenção Aplicação inválida";
-            if (!Enum.IsDefined(logClass.EstadoProcesso))
-                msgError = "Atenção EstadoProcesso inválido";
-            if (!string.IsNullOrEmpty(msgError))
-                throw new Exception(msgError);  
+                sb.Append(logClass.Msg);
+                sb.Append("{ProcessoId}");
+                sb.Append("{TipoLog}");
+                sb.Append("{Aplicacao}");
+                sb.Append("{EstadoProcesso}");
+                foreach (var key in logClass.Chaves.Keys)
+                    sb.Append("{" + key + "}");
+                pars.Add(logClass.ProcessoId);
+                pars.Add(logClass.TipoLog);
+                pars.Add(logClass.Aplicacao);
+                pars.Add(logClass.EstadoProcesso);
+                foreach (var value in logClass.Chaves.Values)
+                    pars.Add(value);
+            }
+            catch (Exception ex)
+            {
 
-            sb.Append(logClass.Msg);
-            sb.Append("{ProcessoId}");
-            sb.Append("{TipoLog}");
-            sb.Append("{Aplicacao}");
-            sb.Append("{EstadoProcesso}");
-            foreach (var key in logClass.Chaves.Keys)
-                sb.Append("{" + key + "}");
-            pars = new List<object>();
-            pars.Add(logClass.ProcessoId);
-            pars.Add(logClass.TipoLog);
-            pars.Add(logClass.Aplicacao);
-            pars.Add(logClass.EstadoProcesso);
-            foreach (var value in logClass.Chaves.Values)
-                pars.Add(value);
+                throw;
+            }
+
+           
         }
 
         #endregion

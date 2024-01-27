@@ -1,8 +1,10 @@
 ﻿using Amazon.Auth.AccessControlPolicy;
 using buildingBlocksCore.Mediator.Messages;
 using buildingBlocksCore.Mediator.Messages.Integration;
+using buildingBlocksCore.Utils;
 using buildingBlocksMessageBus.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Polly;
 using RabbitMQ.Client;
@@ -24,9 +26,15 @@ namespace buildingBlocksMessageBus.Models
         readonly IConfiguration _configuration;
         IConnection _connection;
         IModel _channel = null;
+        ILogger<MessageBusRabbitMq> _logger;
+               bool _disposedValue;
 
-        bool _disposedValue;
-
+        public MessageBusRabbitMq(ILogger<MessageBusRabbitMq> logger, IConfiguration configuration)
+        //public MessageBusRabbitMq( IConfiguration configuration)
+        {
+            _configuration = configuration;
+            _logger = logger;   
+        }
 
         private void OnDisconnect(object s, EventArgs e)
         {
@@ -95,10 +103,7 @@ namespace buildingBlocksMessageBus.Models
             return arguments;
         }
 
-        public MessageBusRabbitMq(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
+      
 
         public void Publish<T>(T message
                                         , PropsMessageQueeDto propsMessageQueeDto) where T : IntegrationEvent
@@ -127,6 +132,8 @@ namespace buildingBlocksMessageBus.Models
                                      basicProperties: properties,
                                      body: body);
             }
+
+          
         }
 
 
@@ -156,8 +163,19 @@ namespace buildingBlocksMessageBus.Models
                 {
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
+                    var messageSerializable = JsonConvert.DeserializeObject<T>(message);
+                    var msgLog =  JsonConvert.SerializeObject(messageSerializable);
 
-                    onMessage.Invoke(JsonConvert.DeserializeObject<T>(message));
+                    _logger.Logar(new LogClass
+                    {
+                        Msg = msgLog,
+                        Aplicacao = messageSerializable.Aplicacao,
+                        EstadoProcesso = EstadoProcesso.EntradaDados,
+                        ProcessoId = messageSerializable.ProcessoId,
+                        TipoLog = TipoLog.Informacao
+                    });
+
+                    onMessage.Invoke(messageSerializable);
 
                     // Note: it is possible to access the channel via
                     //       ((EventingBasicConsumer)sender).Model here
@@ -197,6 +215,17 @@ namespace buildingBlocksMessageBus.Models
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
                     var input = JsonConvert.DeserializeObject<T>(message);
+                    var msgLog = JsonConvert.SerializeObject(input);
+
+                    _logger.Logar(new LogClass
+                    {
+                        Msg = msgLog,
+                        Aplicacao = input.Aplicacao,
+                        EstadoProcesso = EstadoProcesso.EntradaDados,
+                        ProcessoId = input.ProcessoId,
+                        TipoLog = TipoLog.Informacao
+                    });
+
                     onMessage.Invoke(input).Wait();
 
                     // Note: it is possible to access the channel via
@@ -266,85 +295,93 @@ namespace buildingBlocksMessageBus.Models
             where TReq : IntegrationEvent
             where TResp : ResponseMessage
         {
-
-            TryConnect();
-            TResp resp = default(TResp);
-            var processed = false;
-
-
-            var _channelRpc = _connection.CreateModel();
-
-            _channelRpc.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
-            var args = DeadLetterQuee(_channelRpc, propsMessageQueeDto.Arguments);
-
-
-            var replayQueue = $"{propsMessageQueeDto.Queue}_return";
-            var correlationId = Guid.NewGuid().ToString();
-
-            _channelRpc.QueueDeclare(queue: replayQueue,
-                                 durable: propsMessageQueeDto.Durable,
-                                 exclusive: propsMessageQueeDto.Exclusive,
-                                 autoDelete: propsMessageQueeDto.AutoDelete,
-                                 arguments: args);
-
-            _channelRpc.QueueDeclare(queue: propsMessageQueeDto.Queue,
-                                  durable: propsMessageQueeDto.Durable,
-                                  exclusive: propsMessageQueeDto.Exclusive,
-                                  autoDelete: propsMessageQueeDto.AutoDelete,
-                                  arguments: args);
-
-
-            var consumer = new EventingBasicConsumer(_channelRpc);
-
-            consumer.Received += (model, ea) =>
+            try
             {
-                try
+                TryConnect();
+                TResp resp = default(TResp);
+                var processed = false;
+
+
+                var _channelRpc = _connection.CreateModel();
+
+                _channelRpc.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                var args = DeadLetterQuee(_channelRpc, propsMessageQueeDto.Arguments);
+
+
+                var replayQueue = $"{propsMessageQueeDto.Queue}_return";
+                var correlationId = Guid.NewGuid().ToString();
+
+                _channelRpc.QueueDeclare(queue: replayQueue,
+                                     durable: propsMessageQueeDto.Durable,
+                                     exclusive: propsMessageQueeDto.Exclusive,
+                                     autoDelete: propsMessageQueeDto.AutoDelete,
+                                     arguments: args);
+
+                _channelRpc.QueueDeclare(queue: propsMessageQueeDto.Queue,
+                                      durable: propsMessageQueeDto.Durable,
+                                      exclusive: propsMessageQueeDto.Exclusive,
+                                      autoDelete: propsMessageQueeDto.AutoDelete,
+                                      arguments: args);
+
+
+                var consumer = new EventingBasicConsumer(_channelRpc);
+
+                consumer.Received += (model, ea) =>
                 {
-                    if (correlationId == ea.BasicProperties.CorrelationId)
+                    try
                     {
-                        var body = ea.Body.ToArray();
-                        var message = Encoding.UTF8.GetString(body);
-                        resp = JsonConvert.DeserializeObject<TResp>(message);
-                        _channelRpc.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
-                        processed = true;
+                        if (correlationId == ea.BasicProperties.CorrelationId)
+                        {
+                            var body = ea.Body.ToArray();
+                            var message = Encoding.UTF8.GetString(body);
+                            resp = JsonConvert.DeserializeObject<TResp>(message);
+                            _channelRpc.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                            processed = true;
+                        }
+                        else
+                            _channelRpc.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
                     }
-                    else
-                        _channelRpc.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
-                }
-                catch (Exception ex)
+                    catch (Exception ex)
+                    {
+                        processed = true;
+                        _channelRpc.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
+                    }
+                };
+
+                _channelRpc.BasicConsume(queue: replayQueue, autoAck: false, consumer: consumer);
+
+                /**/
+
+                var pros = _channelRpc.CreateBasicProperties();
+
+                pros.CorrelationId = correlationId;
+                pros.ReplyTo = replayQueue;
+                pros.Expiration = propsMessageQueeDto.TimeoutMensagem.ToString();
+                var message = JsonConvert.SerializeObject(req);
+                var body = Encoding.UTF8.GetBytes(message);
+
+                _channelRpc.BasicPublish(exchange: "",
+                                           routingKey: propsMessageQueeDto.Queue,
+                                           basicProperties: pros,
+                                           body: body);
+
+
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+                while (!processed)
                 {
-                    processed = true;
-                    _channelRpc.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
+                    if (stopwatch.ElapsedMilliseconds >= propsMessageQueeDto.TimeoutMensagem)
+                        return resp;
                 }
-            };
 
-            _channelRpc.BasicConsume(queue: replayQueue, autoAck: false, consumer: consumer);
-
-            /**/
-
-            var pros = _channelRpc.CreateBasicProperties();
-
-            pros.CorrelationId = correlationId;
-            pros.ReplyTo = replayQueue;
-            pros.Expiration = propsMessageQueeDto.TimeoutMensagem.ToString();
-            var message = JsonConvert.SerializeObject(req);
-            var body = Encoding.UTF8.GetBytes(message);
-
-            _channelRpc.BasicPublish(exchange: "",
-                                       routingKey: propsMessageQueeDto.Queue,
-                                       basicProperties: pros,
-                                       body: body);
-
-
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            while (!processed)
-            {
-                if (stopwatch.ElapsedMilliseconds >= propsMessageQueeDto.TimeoutMensagem)
-                    return resp;
+                return resp;
             }
+            catch (Exception ex)
+            {
 
-            return resp;
+                throw;
+            }
+           
         }
         /*fim*/
 
@@ -353,56 +390,78 @@ namespace buildingBlocksMessageBus.Models
                                                                     Func<TReq, Task<TResp>> onMessage)
             where TReq : IntegrationEvent where TResp : ResponseMessage
         {
-            TryConnect();
-
-
-
-            var _channelRpcRespond = _connection.CreateModel();
-            _channelRpcRespond.BasicQos(0, 1, false);
-            var args = DeadLetterQuee(_channelRpcRespond, propsMessageQueeDto.Arguments);
-            _channelRpcRespond.QueueDeclare(queue: propsMessageQueeDto.Queue,
-                                     durable: propsMessageQueeDto.Durable,
-                                     exclusive: propsMessageQueeDto.Exclusive,
-                                     autoDelete: propsMessageQueeDto.AutoDelete,
-                                     arguments: args);
-
-
-
-            var consumer = new EventingBasicConsumer(_channelRpcRespond);
-
-
-
-            consumer.Received += (model, ea) =>
+            try
             {
-                try
+                TryConnect();
+
+
+
+                var _channelRpcRespond = _connection.CreateModel();
+                _channelRpcRespond.BasicQos(0, 1, false);
+                var args = DeadLetterQuee(_channelRpcRespond, propsMessageQueeDto.Arguments);
+                _channelRpcRespond.QueueDeclare(queue: propsMessageQueeDto.Queue,
+                                         durable: propsMessageQueeDto.Durable,
+                                         exclusive: propsMessageQueeDto.Exclusive,
+                                         autoDelete: propsMessageQueeDto.AutoDelete,
+                                         arguments: args);
+
+
+
+                var consumer = new EventingBasicConsumer(_channelRpcRespond);
+
+
+
+                consumer.Received += (model, ea) =>
                 {
-                    string response = null;
-                    var body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
-                    var resp = (onMessage?.Invoke(JsonConvert.DeserializeObject<TReq>(message))).Result;
-                    response = JsonConvert.SerializeObject(resp);
+                    try
+                    {
+                        string response = null;
+                        var body = ea.Body.ToArray();
+                        var message = Encoding.UTF8.GetString(body);
+                        var messageSerializable = JsonConvert.DeserializeObject<TReq>(message);
+                        var msgLog = JsonConvert.SerializeObject(messageSerializable);
 
-                    var props = ea.BasicProperties;
-                    var replyProps = _channelRpcRespond.CreateBasicProperties();
-                    replyProps.CorrelationId = props.CorrelationId;
-                    replyProps.Expiration = propsMessageQueeDto.TimeoutMensagem.ToString();
+                        _logger.Logar(new LogClass
+                        {
+                            Msg = msgLog,
+                            Aplicacao = messageSerializable.Aplicacao,
+                            EstadoProcesso = EstadoProcesso.EntradaDados,
+                            ProcessoId = messageSerializable.ProcessoId,
+                            TipoLog = TipoLog.Informacao
+                        });
 
-                    var responseBytes = Encoding.UTF8.GetBytes(response);
+                        var resp = (onMessage?.Invoke(messageSerializable)).Result;
+                        response = JsonConvert.SerializeObject(resp);
 
-                    _channelRpcRespond.BasicPublish(exchange: "", routingKey: props.ReplyTo,
-                        basicProperties: replyProps, body: responseBytes);
+                        var props = ea.BasicProperties;
+                        var replyProps = _channelRpcRespond.CreateBasicProperties();
+                        replyProps.CorrelationId = props.CorrelationId;
+                        replyProps.Expiration = propsMessageQueeDto.TimeoutMensagem.ToString();
 
-                    _channelRpcRespond.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
-                }
-                catch (Exception err)
-                {
-                    _channelRpcRespond.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
-                }
-            };
+                        var responseBytes = Encoding.UTF8.GetBytes(response);
 
-            _channelRpcRespond.BasicConsume(queue: propsMessageQueeDto.Queue,
-                                    autoAck: false,
-                                    consumer: consumer);
+                        _channelRpcRespond.BasicPublish(exchange: "", routingKey: props.ReplyTo,
+                            basicProperties: replyProps, body: responseBytes);
+
+                        _channelRpcRespond.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                    }
+                    catch (Exception err)
+                    {
+                        _channelRpcRespond.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
+                    }
+                };
+
+                _channelRpcRespond.BasicConsume(queue: propsMessageQueeDto.Queue,
+                                        autoAck: false,
+                                        consumer: consumer);
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+          
 
         }
         /*fim*/

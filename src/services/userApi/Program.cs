@@ -113,6 +113,7 @@ builder.Services.AddScoped<IUser, AspNetUser>();
 //
 builder.Services.AddScoped<LNotifications>();
 
+builder.Services.AddLogging();
 
 var appSettings = configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettings);

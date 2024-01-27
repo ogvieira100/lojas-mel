@@ -113,7 +113,8 @@ namespace userApi.V1.Controllers
                     IdentityResult result = await _userManager.DeleteAsync(identityUser);
                     if (result.Succeeded)
                     {
-                        _messageBusRabbitMq.Publish(new UserDeletedIntegrationEvent() { Id = id, UserDeleteId = id },
+
+                            _messageBusRabbitMq.Publish(new UserDeletedIntegrationEvent() { Id = id, UserDeleteId = id, Aplicacao = Aplicacao.Customer },
                             new buildingBlocksMessageBus.Models.PropsMessageQueeDto
                             {
                                 Queue = "QueeUserDeleted"
@@ -199,8 +200,9 @@ namespace userApi.V1.Controllers
                             Email = userRegister.Email,
                             Nome = userRegister.Name,
                             UserId = new Guid(user.Id.ToLower()),
-                            UserInserted = _user.GetUserId()
-
+                            UserInserted = _user.GetUserId(),
+                            Aplicacao = Aplicacao.Customer,
+                            ProcessoId =  Guid.NewGuid(),
                         }, new buildingBlocksMessageBus.Models.PropsMessageQueeDto { Queue = "RPCUserInserted", Durable = false });
                     if (response.Notifications.Any())
                     {
