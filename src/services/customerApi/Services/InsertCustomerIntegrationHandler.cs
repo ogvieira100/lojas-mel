@@ -48,6 +48,7 @@ namespace customerApi.Services
                     commandInserted.Nome = request.Nome;
                     commandInserted.CPF = request.CPF;
                     commandInserted.Email = request.Email;
+                    commandInserted.ProcessoId = request.ProcessoId;    
                     commandInserted.Id = request.UserId;
                     var respCommand = await serviceArchive.SendCommand<InsertCustomerCommand, InsertCustomerResponseCommad>(commandInserted);
                     if (respCommand.Notifications.Any())

@@ -10,6 +10,7 @@ using buildingBlocksCore.Validations.Extension;
 using customerApi.Application.Commands.Enderecos;
 using FluentValidation;
 using MediatR;
+using Microsoft.Identity.Client;
 
 namespace customerApi.Application.Commands.Customer
 {
@@ -20,7 +21,7 @@ namespace customerApi.Application.Commands.Customer
     {
         readonly IBaseRepository<Cliente> _customerRepository;
         readonly IMapper _mapper;
-        readonly IUser _user;
+        readonly buildingBlocksCore.Identity.IUser _user;
         readonly LNotifications _notifications;
         readonly IMediatorHandler _mediatorHandler;
         readonly IValidator<InsertCustomerCommand> _validatorInsertCustomerCommand;
@@ -33,7 +34,7 @@ namespace customerApi.Application.Commands.Customer
                                      IValidator<InsertCustomerCommand> validatorInsertCustomerCommand,
                                      IValidator<UpdateCustomerCommand> validatorUpdateCustomerCommand, 
                                      IBaseRepository<Cliente> customerRepository,
-            IUser user,
+            buildingBlocksCore.Identity.IUser user,
             IMapper mapper)
         {
             _mapper = mapper;
@@ -52,7 +53,7 @@ namespace customerApi.Application.Commands.Customer
                     Aplicacao = Aplicacao.Customer,
                     EstadoProcesso = EstadoProcesso.Processando,
                     Msg = "Inserindo customer",
-                    ProcessoId = Guid.NewGuid(),    
+                    ProcessoId = request.ProcessoId,    
                     TipoLog = TipoLog.Informacao
             });
 
@@ -72,10 +73,29 @@ namespace customerApi.Application.Commands.Customer
                 return res;
 
 
+            _logger.Logar(new LogClass
+            {
+                Aplicacao = Aplicacao.Customer,
+                EstadoProcesso = EstadoProcesso.Processando,
+                Msg = "Não há erros vamos gravar",
+                ProcessoId = request.ProcessoId,
+                TipoLog = TipoLog.Informacao
+            });
+
+
             var customerCPF = (await _customerRepository._repositoryConsult.SearchAsync(x => x.CPF == request.CPF.OnlyNumbers()))?.FirstOrDefault();
             if (customerCPF != null)
             {
-                res.Notifications.Add(new LNotification { Message = $"Atenção CPF já existente para o Cliente {customerCPF.Nome} com o status {customerCPF.Active} " });
+                var msgError = $"Atenção CPF já existente para o Cliente {customerCPF.Nome} com o status {customerCPF.Active} ";
+                _logger.Logar(new LogClass
+                {
+                    Aplicacao = Aplicacao.Customer,
+                    EstadoProcesso = EstadoProcesso.Processando,
+                    Msg = msgError,
+                    ProcessoId = request.ProcessoId,
+                    TipoLog = TipoLog.Informacao
+                });
+                res.Notifications.Add(new LNotification { Message = msgError });
                 return res;
             }
 
@@ -98,6 +118,15 @@ namespace customerApi.Application.Commands.Customer
                 await _customerRepository.unitOfWork.CommitAsync();
             else
                 res.Notifications.AddRange(_notifications);
+
+            _logger.Logar(new LogClass
+            {
+                Aplicacao = Aplicacao.Customer,
+                EstadoProcesso = EstadoProcesso.Processando,
+                Msg = "Tudo Certo e Finalizado",
+                ProcessoId = request.ProcessoId,
+                TipoLog = TipoLog.Informacao
+            });
 
             res.Response.Id = customerSave.Id;
             return res;

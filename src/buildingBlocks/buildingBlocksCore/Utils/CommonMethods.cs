@@ -81,7 +81,6 @@ namespace buildingBlocksCore.Utils
                         logger.LogInformation(sb.ToString(), pars.ToArray());
                         break;
                 }
-
             }
             catch (Exception ex)
             {
@@ -105,11 +104,11 @@ namespace buildingBlocksCore.Utils
                 if (!string.IsNullOrEmpty(msgError))
                     throw new Exception(msgError);
 
-                sb.Append(logClass.Msg);
-                sb.Append("{ProcessoId}");
-                sb.Append("{TipoLog}");
-                sb.Append("{Aplicacao}");
-                sb.Append("{EstadoProcesso}");
+                sb.Append(logClass.Msg+" ");
+                sb.Append(" ProcessoId:{ProcessoId} ");
+                sb.Append(" TipoLog:{TipoLog} ");
+                sb.Append(" Aplicacao:{Aplicacao} ");
+                sb.Append(" EstadoProcesso:{EstadoProcesso} ");
                 foreach (var key in logClass.Chaves.Keys)
                     sb.Append("{" + key + "}");
                 pars.Add(logClass.ProcessoId);

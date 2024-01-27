@@ -42,12 +42,14 @@ namespace userApi.V1.Controllers
         readonly IJwtService _jsonWebKeySetService;
         readonly IMapper _mapper;
         readonly IMessageBusRabbitMq _messageBusRabbitMq;
+        readonly ILogger<UserController> _logger;   
 
 
 
         public UserController(SignInManager<IdentityUser> signInManager,
                                   UserManager<IdentityUser> userManager,
                                   IOptions<AppSettings> appSettings,
+                                  ILogger<UserController> logger, 
                                   IOptions<AppTokenSettings> appTokenSettings,
                                   IMapper mapper,
                                   IMessageBusRabbitMq messageBusRabbitMq,
@@ -60,6 +62,7 @@ namespace userApi.V1.Controllers
         {
             _appTokenSettings = appTokenSettings.Value;
             _user = user;
+            _logger  = logger;  
             _messageBusRabbitMq = messageBusRabbitMq;
             _mapper = mapper;
             _applicationUserContext = applicationUserContext;
@@ -178,6 +181,20 @@ namespace userApi.V1.Controllers
 
             if (!ModelState.IsValid) return ReturnModelState(ModelState);
 
+            var registerGuid = Guid.NewGuid();
+
+            _logger.Logar(new LogClass
+            {
+
+                Aplicacao = Aplicacao.User,
+                EstadoProcesso = EstadoProcesso.Inicio,
+                ProcessoId = registerGuid,
+                TipoLog = TipoLog.Informacao,
+                Msg = " Atenção Inicio do processo de registro de usuario "
+
+            });
+            
+
             return await ExecControllerAsync(async () =>
             {
                 var user = new IdentityUser
@@ -192,6 +209,19 @@ namespace userApi.V1.Controllers
 
                 if (result.Succeeded)
                 {
+
+
+                    _logger.Logar(new LogClass
+                    {
+
+                        Aplicacao = Aplicacao.User,
+                        EstadoProcesso = EstadoProcesso.Processando,
+                        ProcessoId = registerGuid,
+                        TipoLog = TipoLog.Informacao,
+                        Msg = " Processo obteve sucesso preparando para enviar "
+
+                    });
+
                     var response = _messageBusRabbitMq.RpcSendRequestReceiveResponse<UserInsertedIntegrationEvent, buildingBlocksCore.Mediator.Messages.ResponseMessage>(
                         new UserInsertedIntegrationEvent()
                         {
@@ -202,14 +232,37 @@ namespace userApi.V1.Controllers
                             UserId = new Guid(user.Id.ToLower()),
                             UserInserted = _user.GetUserId(),
                             Aplicacao = Aplicacao.Customer,
-                            ProcessoId =  Guid.NewGuid(),
+                            ProcessoId = registerGuid,
                         }, new buildingBlocksMessageBus.Models.PropsMessageQueeDto { Queue = "RPCUserInserted", Durable = false });
                     if (response.Notifications.Any())
                     {
+                        _logger.Logar(new LogClass
+                        {
+
+                            Aplicacao = Aplicacao.User,
+                            EstadoProcesso = EstadoProcesso.Erro,
+                            ProcessoId = registerGuid,
+                            TipoLog = TipoLog.Erro,
+                            Msg = " Houve uma falha não foi possível inserir o cliente  "
+
+                        });
+
                         await _userManager.DeleteAsync(user);
                         _notifications.AddRange(response.Notifications);
                         return (null);
                     }
+
+                    _logger.Logar(new LogClass
+                    {
+
+                        Aplicacao = Aplicacao.User,
+                        EstadoProcesso = EstadoProcesso.Finalizando,
+                        ProcessoId = registerGuid,
+                        TipoLog = TipoLog.Informacao,
+                        Msg = " Tudo certo finalizei "
+
+                    });
+
                     return (_mapper.Map<UserRegisterDto>(user));
                 }
 

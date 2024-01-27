@@ -168,7 +168,8 @@ namespace buildingBlocksMessageBus.Models
 
                     _logger.Logar(new LogClass
                     {
-                        Msg = msgLog,
+                        //Msg = msgLog,
+                        Msg = "Entrada de dados",
                         Aplicacao = messageSerializable.Aplicacao,
                         EstadoProcesso = EstadoProcesso.EntradaDados,
                         ProcessoId = messageSerializable.ProcessoId,
@@ -219,7 +220,8 @@ namespace buildingBlocksMessageBus.Models
 
                     _logger.Logar(new LogClass
                     {
-                        Msg = msgLog,
+                        // Msg = msgLog,
+                        Msg = "Entrada de dados",
                         Aplicacao = input.Aplicacao,
                         EstadoProcesso = EstadoProcesso.EntradaDados,
                         ProcessoId = input.ProcessoId,
@@ -423,7 +425,8 @@ namespace buildingBlocksMessageBus.Models
 
                         _logger.Logar(new LogClass
                         {
-                            Msg = msgLog,
+                            // Msg = msgLog,
+                            Msg = "Entrada de dados",
                             Aplicacao = messageSerializable.Aplicacao,
                             EstadoProcesso = EstadoProcesso.EntradaDados,
                             ProcessoId = messageSerializable.ProcessoId,

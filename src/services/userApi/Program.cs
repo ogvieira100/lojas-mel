@@ -14,6 +14,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using NetDevPack.Security.Jwt.Core.Jwa;
 using NetDevPack.Security.JwtExtensions;
+using Serilog.Sinks.Elasticsearch;
+using Serilog;
 using System.Reflection;
 using userApi.Automapper;
 using userApi.Data;
@@ -202,7 +204,27 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddSingleton<IMessageBusRabbitMq, MessageBusRabbitMq>();
 
 
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .WriteTo.Debug()
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(ConfigureElasticSink(configuration, environment.EnvironmentName))
+    .Enrich.WithProperty("Environment", environment)
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
 
+static ElasticsearchSinkOptions ConfigureElasticSink(IConfigurationRoot configuration, string environment)
+{
+    return new ElasticsearchSinkOptions(new Uri(configuration["ElasticConfiguration:Uri"]))
+    {
+        AutoRegisterTemplate = true,
+        IndexFormat = $"lojasmel-{environment?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}"
+    };
+}
+
+builder.Logging.ClearProviders();
+builder.Host.UseSerilog(Log.Logger, true);
 
 
 var app = builder.Build();
@@ -231,6 +253,8 @@ app.UseAuthorization();
 app.UseAuthentication();
 
 app.MapControllers();
+
+app.UseSerilogRequestLogging();
 
 //localhost/
 app.UseJwksDiscovery("/minha-chave");

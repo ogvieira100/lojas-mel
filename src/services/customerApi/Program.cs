@@ -22,6 +22,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using NetDevPack.Security.JwtExtensions;
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
 using System;
 using System.Reflection;
 
@@ -194,16 +196,36 @@ builder.Services.AddScoped<IValidator<InsertCustomerCommand>, InsertCustomerComm
 builder.Services.AddScoped<IValidator<UpdateEnderecoCommand>, UpdateEnderecoCommandValidator>();
 builder.Services.AddScoped<IValidator<UpdateCustomerCommand>, UpdateCustomerCommandValidation>();
 
-//builder.Services.AddValidatorsFromAssemblyContaining<PersonValidator>();
-//builder.Services.AddFluentValidation(typeof(InsertEnderecoCommandValidator))
-//    .AddFluentValidation(typeof(InsertCustomerCommandValidation))
-//    .AddFluentValidation(typeof(UpdateEnderecoCommandValidator))
-//    .AddFluentValidation(typeof(UpdateCustomerCommandValidation))
-//    ;
 
-// 
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .WriteTo.Debug()
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(ConfigureElasticSink(configuration, environment.EnvironmentName))
+    .Enrich.WithProperty("Environment", environment)
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
+
+ static ElasticsearchSinkOptions ConfigureElasticSink(IConfigurationRoot configuration, string environment)
+{
+    return new ElasticsearchSinkOptions(new Uri(configuration["ElasticConfiguration:Uri"]))
+    {
+        AutoRegisterTemplate = true,
+        IndexFormat = $"lojasmel-{environment?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}"
+    };
+}
+
+builder.Logging.ClearProviders();
+builder.Host.UseSerilog(Log.Logger, true);
+
+
+
 
 var app = builder.Build();
+
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -226,6 +248,8 @@ app.UseAuthorization();
 app.UseAuthentication();
 
 app.MapControllers();
+
+app.UseSerilogRequestLogging(); 
 
 
 using (var scope = app.Services.CreateScope())

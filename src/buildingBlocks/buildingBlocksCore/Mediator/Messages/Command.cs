@@ -11,7 +11,7 @@ namespace buildingBlocksCore.Mediator.Messages
     public class Command<T> : Message, IRequest<ResponseCommad<T>> where T :class 
     {
 
-
+        public Guid ProcessoId { get; set; }
 
     }
 }
