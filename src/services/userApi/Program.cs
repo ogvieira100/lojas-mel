@@ -20,6 +20,7 @@ using System.Reflection;
 using userApi.Automapper;
 using userApi.Data;
 using userApi.Models;
+using Serilog.Formatting.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -214,12 +215,16 @@ Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(configuration)
     .CreateLogger();
 
+
+
+
 static ElasticsearchSinkOptions ConfigureElasticSink(IConfigurationRoot configuration, string environment)
 {
     return new ElasticsearchSinkOptions(new Uri(configuration["ElasticConfiguration:Uri"]))
     {
         AutoRegisterTemplate = true,
-        IndexFormat = $"lojasmel-{environment?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}"
+        CustomFormatter = new ElasticsearchJsonFormatter(),
+        IndexFormat = $"lojasmel-{environment?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}",
     };
 }
 

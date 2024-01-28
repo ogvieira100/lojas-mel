@@ -26,14 +26,14 @@ namespace buildingBlocksMessageBus.Models
         readonly IConfiguration _configuration;
         IConnection _connection;
         IModel _channel = null;
-        ILogger<MessageBusRabbitMq> _logger;
+       // ILogger<MessageBusRabbitMq> _logger;
                bool _disposedValue;
 
-        public MessageBusRabbitMq(ILogger<MessageBusRabbitMq> logger, IConfiguration configuration)
-        //public MessageBusRabbitMq( IConfiguration configuration)
+       // public MessageBusRabbitMq(ILogger<MessageBusRabbitMq> logger, IConfiguration configuration)
+        public MessageBusRabbitMq( IConfiguration configuration)
         {
             _configuration = configuration;
-            _logger = logger;   
+        //    _logger = logger;   
         }
 
         private void OnDisconnect(object s, EventArgs e)
@@ -166,10 +166,11 @@ namespace buildingBlocksMessageBus.Models
                     var messageSerializable = JsonConvert.DeserializeObject<T>(message);
                     var msgLog =  JsonConvert.SerializeObject(messageSerializable);
 
-                    _logger.Logar(new LogClass
+                    CommonMethods.Logar(new LogClass
                     {
-                        //Msg = msgLog,
-                        Msg = "Entrada de dados",
+                        Msg = message,
+                        EObjetoJson = true,
+                        //Msg = "Entrada de dados",
                         Aplicacao = messageSerializable.Aplicacao,
                         EstadoProcesso = EstadoProcesso.EntradaDados,
                         ProcessoId = messageSerializable.ProcessoId,
@@ -218,10 +219,11 @@ namespace buildingBlocksMessageBus.Models
                     var input = JsonConvert.DeserializeObject<T>(message);
                     var msgLog = JsonConvert.SerializeObject(input);
 
-                    _logger.Logar(new LogClass
+                    CommonMethods.Logar(new LogClass
                     {
-                        // Msg = msgLog,
-                        Msg = "Entrada de dados",
+                         Msg = message,
+                         EObjetoJson = true,
+                        //Msg = "Entrada de dados",
                         Aplicacao = input.Aplicacao,
                         EstadoProcesso = EstadoProcesso.EntradaDados,
                         ProcessoId = input.ProcessoId,
@@ -423,10 +425,11 @@ namespace buildingBlocksMessageBus.Models
                         var messageSerializable = JsonConvert.DeserializeObject<TReq>(message);
                         var msgLog = JsonConvert.SerializeObject(messageSerializable);
 
-                        _logger.Logar(new LogClass
+                        CommonMethods.Logar(new LogClass
                         {
-                            // Msg = msgLog,
-                            Msg = "Entrada de dados",
+                             Msg = message,
+                             EObjetoJson = true,
+                           // Msg = "Entrada de dados",
                             Aplicacao = messageSerializable.Aplicacao,
                             EstadoProcesso = EstadoProcesso.EntradaDados,
                             ProcessoId = messageSerializable.ProcessoId,

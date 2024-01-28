@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using AutoMapper;
 using buildingBlocksCore.Identity;
+using buildingBlocksCore.Mediator.Messages;
 using buildingBlocksCore.Mediator.Messages.Integration;
 using buildingBlocksCore.Models.Dto;
 using buildingBlocksCore.Models.Request;
@@ -17,6 +18,8 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver.Core.WireProtocol.Messages;
 using MongoDB.Driver.Linq;
 using NetDevPack.Security.Jwt.Core.Interfaces;
+using Newtonsoft.Json;
+using Serilog;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.AccessControl;
@@ -191,9 +194,11 @@ namespace userApi.V1.Controllers
                 ProcessoId = registerGuid,
                 TipoLog = TipoLog.Informacao,
                 Msg = " Atenção Inicio do processo de registro de usuario "
-
             });
-            
+
+            //Log.Information("Objeto JSON {ProcessoId} logado: {@JsonObj}", JsonConvert.SerializeObject(userRegister), registerGuid);
+
+
 
             return await ExecControllerAsync(async () =>
             {

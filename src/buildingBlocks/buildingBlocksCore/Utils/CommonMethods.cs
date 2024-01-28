@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using System.Xml;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace buildingBlocksCore.Utils
 {
@@ -26,8 +27,7 @@ namespace buildingBlocksCore.Utils
         Inicio = 1,
         Processando = 2,
         Finalizando = 3,
-        Erro = 4,
-        EntradaDados = 5
+        EntradaDados = 4
     }
 
     public enum Aplicacao
@@ -48,6 +48,8 @@ namespace buildingBlocksCore.Utils
         public EstadoProcesso EstadoProcesso { get; set; }
         public IDictionary<string, string> Chaves { get; set; }
 
+        public bool EObjetoJson { get; set; }
+
         public LogClass()
         {
             Chaves = new Dictionary<string, string>();
@@ -59,7 +61,7 @@ namespace buildingBlocksCore.Utils
 
         #region " Logger "
 
-        public static void Logar(LogClass logClass, ILogger logger)
+        public static void Logar(LogClass logClass, Microsoft.Extensions.Logging.ILogger logger)
         {
             try
             {
@@ -69,16 +71,46 @@ namespace buildingBlocksCore.Utils
                 switch (logClass.TipoLog)
                 {
                     case TipoLog.Informacao:
-                        logger.LogInformation(sb.ToString(), pars.ToArray());
+                        Log.Information(sb.ToString(), pars.ToArray());
                         break;
                     case TipoLog.Erro:
-                        logger.LogError(sb.ToString(), pars.ToArray());
+                        Log.Error(sb.ToString(), pars.ToArray());
                         break;
                     case TipoLog.Alerta:
-                        logger.LogWarning(sb.ToString(), pars.ToArray());
+                        Log.Warning(sb.ToString(), pars.ToArray());
                         break;
                     default:
-                        logger.LogInformation(sb.ToString(), pars.ToArray());
+                        Log.Information(sb.ToString(), pars.ToArray());
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+        public static void Logar(LogClass logClass)
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                List<object> pars = new List<object>();
+                ObterInfoLog(logClass, sb, pars);
+                switch (logClass.TipoLog)
+                {
+                    case TipoLog.Informacao:
+                        Log.Information(sb.ToString(), pars.ToArray());
+                        break;
+                    case TipoLog.Erro:
+                        Log.Error(sb.ToString(), pars.ToArray());
+                        break;
+                    case TipoLog.Alerta:
+                        Log.Warning(sb.ToString(), pars.ToArray());
+                        break;
+                    default:
+                        Log.Information(sb.ToString(), pars.ToArray());
                         break;
                 }
             }
@@ -104,19 +136,32 @@ namespace buildingBlocksCore.Utils
                 if (!string.IsNullOrEmpty(msgError))
                     throw new Exception(msgError);
 
-                sb.Append(logClass.Msg+" ");
-                sb.Append(" ProcessoId:{ProcessoId} ");
-                sb.Append(" TipoLog:{TipoLog} ");
-                sb.Append(" Aplicacao:{Aplicacao} ");
-                sb.Append(" EstadoProcesso:{EstadoProcesso} ");
+
+                if (logClass.EObjetoJson)
+                {
+                    sb.Append("Objeto JSON logado: {@JsonObj}");
+                }
+                else 
+                 sb.Append(logClass.Msg+" ");
+
+                 sb.Append(" ProcessoId:{ProcessoId} ");
+                 sb.Append(" TipoLog:{TipoLog} ");
+                 sb.Append(" Aplicacao:{Aplicacao} ");
+                 sb.Append(" EstadoProcesso:{EstadoProcesso} ");
                 foreach (var key in logClass.Chaves.Keys)
                     sb.Append("{" + key + "}");
-                pars.Add(logClass.ProcessoId);
-                pars.Add(logClass.TipoLog);
-                pars.Add(logClass.Aplicacao);
-                pars.Add(logClass.EstadoProcesso);
-                foreach (var value in logClass.Chaves.Values)
-                    pars.Add(value);
+
+                
+
+                if (logClass.EObjetoJson)
+                    pars.Add(logClass.Msg);
+                    pars.Add(logClass.ProcessoId);
+                    pars.Add(logClass.TipoLog);
+                    pars.Add(logClass.Aplicacao);
+                    pars.Add(logClass.EstadoProcesso);
+                    foreach (var value in logClass.Chaves.Values)
+                        pars.Add(value);
+                
             }
             catch (Exception ex)
             {

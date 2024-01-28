@@ -23,6 +23,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using NetDevPack.Security.JwtExtensions;
 using Serilog;
+using Serilog.Formatting.Elasticsearch;
 using Serilog.Sinks.Elasticsearch;
 using System;
 using System.Reflection;
@@ -212,7 +213,8 @@ Log.Logger = new LoggerConfiguration()
     return new ElasticsearchSinkOptions(new Uri(configuration["ElasticConfiguration:Uri"]))
     {
         AutoRegisterTemplate = true,
-        IndexFormat = $"lojasmel-{environment?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}"
+        IndexFormat = $"lojasmel-{environment?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}",
+        CustomFormatter = new ElasticsearchJsonFormatter(),
     };
 }
 
