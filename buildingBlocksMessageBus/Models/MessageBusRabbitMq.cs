@@ -26,14 +26,10 @@ namespace buildingBlocksMessageBus.Models
         readonly IConfiguration _configuration;
         IConnection _connection;
         IModel _channel = null;
-       // ILogger<MessageBusRabbitMq> _logger;
-               bool _disposedValue;
-
-       // public MessageBusRabbitMq(ILogger<MessageBusRabbitMq> logger, IConfiguration configuration)
+        bool _disposedValue;
         public MessageBusRabbitMq( IConfiguration configuration)
         {
             _configuration = configuration;
-        //    _logger = logger;   
         }
 
         private void OnDisconnect(object s, EventArgs e)
@@ -170,12 +166,12 @@ namespace buildingBlocksMessageBus.Models
                     {
                         Msg = message,
                         EObjetoJson = true,
-                        //Msg = "Entrada de dados",
+                        Processo = messageSerializable.Processo,
                         Aplicacao = messageSerializable.Aplicacao,
                         EstadoProcesso = EstadoProcesso.EntradaDados,
                         ProcessoId = messageSerializable.ProcessoId,
                         TipoLog = TipoLog.Informacao
-                    });
+                    }) ;
 
                     onMessage.Invoke(messageSerializable);
 
@@ -225,6 +221,7 @@ namespace buildingBlocksMessageBus.Models
                          EObjetoJson = true,
                         //Msg = "Entrada de dados",
                         Aplicacao = input.Aplicacao,
+                        Processo = input.Processo,  
                         EstadoProcesso = EstadoProcesso.EntradaDados,
                         ProcessoId = input.ProcessoId,
                         TipoLog = TipoLog.Informacao
@@ -431,6 +428,7 @@ namespace buildingBlocksMessageBus.Models
                              EObjetoJson = true,
                            // Msg = "Entrada de dados",
                             Aplicacao = messageSerializable.Aplicacao,
+                            Processo = messageSerializable.Processo,
                             EstadoProcesso = EstadoProcesso.EntradaDados,
                             ProcessoId = messageSerializable.ProcessoId,
                             TipoLog = TipoLog.Informacao

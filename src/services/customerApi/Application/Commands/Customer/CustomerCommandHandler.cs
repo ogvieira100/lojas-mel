@@ -54,7 +54,8 @@ namespace customerApi.Application.Commands.Customer
                     EstadoProcesso = EstadoProcesso.Processando,
                     Msg = "Inserindo customer",
                     ProcessoId = request.ProcessoId,    
-                    TipoLog = TipoLog.Informacao
+                    TipoLog = TipoLog.Informacao,
+                    Processo = Processo.InserirUsuario
             });
 
 
@@ -79,7 +80,8 @@ namespace customerApi.Application.Commands.Customer
                 EstadoProcesso = EstadoProcesso.Processando,
                 Msg = "Não há erros vamos gravar",
                 ProcessoId = request.ProcessoId,
-                TipoLog = TipoLog.Informacao
+                TipoLog = TipoLog.Informacao,
+                Processo = Processo.InserirUsuario
             });
 
 
@@ -93,7 +95,8 @@ namespace customerApi.Application.Commands.Customer
                     EstadoProcesso = EstadoProcesso.Processando,
                     Msg = msgError,
                     ProcessoId = request.ProcessoId,
-                    TipoLog = TipoLog.Informacao
+                    TipoLog = TipoLog.Informacao,
+                    Processo = Processo.InserirUsuario
                 });
                 res.Notifications.Add(new LNotification { Message = msgError });
                 return res;
@@ -125,7 +128,8 @@ namespace customerApi.Application.Commands.Customer
                 EstadoProcesso = EstadoProcesso.Processando,
                 Msg = "Tudo Certo e Finalizado",
                 ProcessoId = request.ProcessoId,
-                TipoLog = TipoLog.Informacao
+                TipoLog = TipoLog.Informacao,
+                Processo = Processo.InserirUsuario
             });
 
             res.Response.Id = customerSave.Id;

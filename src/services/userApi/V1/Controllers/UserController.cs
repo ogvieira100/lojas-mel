@@ -193,13 +193,11 @@ namespace userApi.V1.Controllers
                 EstadoProcesso = EstadoProcesso.Inicio,
                 ProcessoId = registerGuid,
                 TipoLog = TipoLog.Informacao,
+                Processo = Processo.InserirUsuario,
                 Msg = " Atenção Inicio do processo de registro de usuario "
             });
 
-            //Log.Information("Objeto JSON {ProcessoId} logado: {@JsonObj}", JsonConvert.SerializeObject(userRegister), registerGuid);
-
-
-
+         
             return await ExecControllerAsync(async () =>
             {
                 var user = new IdentityUser
@@ -223,6 +221,7 @@ namespace userApi.V1.Controllers
                         EstadoProcesso = EstadoProcesso.Processando,
                         ProcessoId = registerGuid,
                         TipoLog = TipoLog.Informacao,
+                        Processo = Processo.InserirUsuario,
                         Msg = " Processo obteve sucesso preparando para enviar "
 
                     });
@@ -245,9 +244,10 @@ namespace userApi.V1.Controllers
                         {
 
                             Aplicacao = Aplicacao.User,
-                            EstadoProcesso = EstadoProcesso.Erro,
+                            EstadoProcesso = EstadoProcesso.Inicio,
                             ProcessoId = registerGuid,
                             TipoLog = TipoLog.Erro,
+                            Processo = Processo.InserirUsuario,    
                             Msg = " Houve uma falha não foi possível inserir o cliente  "
 
                         });
@@ -264,6 +264,7 @@ namespace userApi.V1.Controllers
                         EstadoProcesso = EstadoProcesso.Finalizando,
                         ProcessoId = registerGuid,
                         TipoLog = TipoLog.Informacao,
+                        Processo = Processo.InserirUsuario,
                         Msg = " Tudo certo finalizei "
 
                     });

@@ -39,6 +39,15 @@ namespace buildingBlocksCore.Utils
         Supplier = 5
     }
 
+    public enum Processo
+    { 
+    
+        InserirUsuario = 1,
+        AtualizarUsuario = 2,
+        DeletarUsuario = 3
+    
+    }
+
     public class LogClass
     {
         public string Msg { get; set; }
@@ -46,6 +55,7 @@ namespace buildingBlocksCore.Utils
         public TipoLog TipoLog { get; set; }
         public Aplicacao Aplicacao { get; set; }
         public EstadoProcesso EstadoProcesso { get; set; }
+        public Processo Processo { get; set; }
         public IDictionary<string, string> Chaves { get; set; }
 
         public bool EObjetoJson { get; set; }
@@ -129,6 +139,8 @@ namespace buildingBlocksCore.Utils
                 string msgError = string.Empty;
                 if (!Enum.IsDefined(logClass.TipoLog))
                     msgError = "Atenção TipoLog inválido";
+                if (!Enum.IsDefined(logClass.Processo))
+                    msgError = "Atenção Processo inválido";
                 if (!Enum.IsDefined(logClass.Aplicacao))
                     msgError = "Atenção Aplicação inválida";
                 if (!Enum.IsDefined(logClass.EstadoProcesso))
@@ -145,6 +157,7 @@ namespace buildingBlocksCore.Utils
                  sb.Append(logClass.Msg+" ");
 
                  sb.Append(" ProcessoId:{ProcessoId} ");
+                 sb.Append(" Processo:{Processo} ");
                  sb.Append(" TipoLog:{TipoLog} ");
                  sb.Append(" Aplicacao:{Aplicacao} ");
                  sb.Append(" EstadoProcesso:{EstadoProcesso} ");
@@ -155,7 +168,9 @@ namespace buildingBlocksCore.Utils
 
                 if (logClass.EObjetoJson)
                     pars.Add(logClass.Msg);
+                 
                     pars.Add(logClass.ProcessoId);
+                    pars.Add(logClass.Processo);
                     pars.Add(logClass.TipoLog);
                     pars.Add(logClass.Aplicacao);
                     pars.Add(logClass.EstadoProcesso);

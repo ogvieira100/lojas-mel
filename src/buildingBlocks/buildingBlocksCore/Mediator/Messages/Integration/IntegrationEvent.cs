@@ -33,6 +33,7 @@ namespace buildingBlocksCore.Mediator.Messages.Integration
         public Guid ProcessoId { get; set; }
         public Aplicacao Aplicacao { get; set; }
         public EstadoProcesso EstadoProcesso { get; set; }
+        public Processo Processo { get; set; }
         public IntegrationEvent() : base()   
         {
                     
