@@ -216,14 +216,12 @@ namespace userApi.V1.Controllers
 
                     _logger.Logar(new LogClass
                     {
-
                         Aplicacao = Aplicacao.User,
-                        EstadoProcesso = EstadoProcesso.Processando,
+                        EstadoProcesso = EstadoProcesso.Inicio,
                         ProcessoId = registerGuid,
                         TipoLog = TipoLog.Informacao,
                         Processo = Processo.InserirUsuario,
-                        Msg = " Processo obteve sucesso preparando para enviar "
-
+                        Msg = " Processo obteve sucesso preparando para enviar para o dominio de customer"
                     });
 
                     var response = _messageBusRabbitMq.RpcSendRequestReceiveResponse<UserInsertedIntegrationEvent, buildingBlocksCore.Mediator.Messages.ResponseMessage>(
@@ -237,6 +235,7 @@ namespace userApi.V1.Controllers
                             UserInserted = _user.GetUserId(),
                             Aplicacao = Aplicacao.Customer,
                             ProcessoId = registerGuid,
+                            Processo = Processo.InserirUsuario
                         }, new buildingBlocksMessageBus.Models.PropsMessageQueeDto { Queue = "RPCUserInserted", Durable = false });
                     if (response.Notifications.Any())
                     {
@@ -247,9 +246,19 @@ namespace userApi.V1.Controllers
                             EstadoProcesso = EstadoProcesso.Inicio,
                             ProcessoId = registerGuid,
                             TipoLog = TipoLog.Erro,
-                            Processo = Processo.InserirUsuario,    
-                            Msg = " Houve uma falha não foi possível inserir o cliente  "
+                            Processo = Processo.InserirUsuario, 
+                            EObjetoJson = true,
+                            Msg = JsonConvert.SerializeObject(response.Notifications)
+                        });
 
+                        _logger.Logar(new LogClass
+                        {
+                            Aplicacao = Aplicacao.User,
+                            EstadoProcesso = EstadoProcesso.Inicio,
+                            ProcessoId = registerGuid,
+                            TipoLog = TipoLog.Informacao,
+                            Processo = Processo.InserirUsuario,
+                            Msg = " Deletando usuário da tabela de user "
                         });
 
                         await _userManager.DeleteAsync(user);

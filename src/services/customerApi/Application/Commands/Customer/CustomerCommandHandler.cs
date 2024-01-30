@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using buildingBlocksCore.Data.PersistData.Interfaces;
 using buildingBlocksCore.Data.PersistData.Uow;
 using buildingBlocksCore.Identity;
@@ -11,6 +12,7 @@ using customerApi.Application.Commands.Enderecos;
 using FluentValidation;
 using MediatR;
 using Microsoft.Identity.Client;
+using Newtonsoft.Json;
 
 namespace customerApi.Application.Commands.Customer
 {
@@ -71,7 +73,21 @@ namespace customerApi.Application.Commands.Customer
                 }));
 
             if (_notifications.Any())
+            {
+                _logger.Logar(new LogClass
+                {
+                    Aplicacao = Aplicacao.Customer,
+                    EstadoProcesso = EstadoProcesso.Processando,
+                    Msg = JsonConvert.SerializeObject(_notifications),
+                    EObjetoJson = true,
+                    ProcessoId = request.ProcessoId,
+                    TipoLog = TipoLog.Erro,
+                    Processo = Processo.InserirUsuario
+                });
+
                 return res;
+            }
+            
 
 
             _logger.Logar(new LogClass
@@ -95,7 +111,7 @@ namespace customerApi.Application.Commands.Customer
                     EstadoProcesso = EstadoProcesso.Processando,
                     Msg = msgError,
                     ProcessoId = request.ProcessoId,
-                    TipoLog = TipoLog.Informacao,
+                    TipoLog = TipoLog.Erro,
                     Processo = Processo.InserirUsuario
                 });
                 res.Notifications.Add(new LNotification { Message = msgError });
