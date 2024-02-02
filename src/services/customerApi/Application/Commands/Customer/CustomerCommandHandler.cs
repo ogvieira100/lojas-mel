@@ -154,6 +154,17 @@ namespace customerApi.Application.Commands.Customer
 
         public async Task<ResponseCommad<object>> Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
         {
+            var ProcessoId = Guid.NewGuid();    
+            _logger.Logar(new LogClass
+            {
+                Aplicacao = Aplicacao.Customer,
+                EstadoProcesso = EstadoProcesso.Inicio,
+                Msg = "Atualizando customer",
+                ProcessoId = ProcessoId,
+                TipoLog = TipoLog.Informacao,
+                Processo = Processo.AtualizarUsuario
+            });
+
             var res = new ResponseCommad<object>();
             var validation = await _validatorUpdateCustomerCommand.ValidateAsync(request);
 
@@ -164,7 +175,22 @@ namespace customerApi.Application.Commands.Customer
                 }));
 
             if (_notifications.Any())
+            {
+
+                _logger.Logar(new LogClass
+                {
+                    Aplicacao = Aplicacao.Customer,
+                    EObjetoJson = true,
+                    EstadoProcesso = EstadoProcesso.Finalizando,
+                    Msg = JsonConvert.SerializeObject(_notifications),
+                    ProcessoId = ProcessoId,
+                    TipoLog = TipoLog.Erro,
+                    Processo = Processo.AtualizarUsuario
+                });
+
                 return res;
+            }
+               
 
             var customerCPF = (await _customerRepository._repositoryConsult.SearchAsync(x => x.Id != request.Id
                                                                                   && x.CPF == request.CPF.OnlyNumbers()))
@@ -172,6 +198,15 @@ namespace customerApi.Application.Commands.Customer
             if (customerCPF != null)
             {
                 res.Notifications.Add(new LNotification { Message = $"Atenção CPF já existente para o Cliente {customerCPF.Nome} com o status {customerCPF.Active} " });
+                _logger.Logar(new LogClass
+                {
+                    Aplicacao = Aplicacao.Customer,
+                    EstadoProcesso = EstadoProcesso.Finalizando,
+                    Msg = "Cliente já existente",
+                    ProcessoId = ProcessoId,
+                    TipoLog = TipoLog.Erro,
+                    Processo = Processo.AtualizarUsuario
+                });
                 return res;
             }
 
@@ -200,7 +235,21 @@ namespace customerApi.Application.Commands.Customer
             if (!_notifications.Any())
                 await _customerRepository.unitOfWork.CommitAsync();
             else
+            {
                 res.Notifications.AddRange(_notifications);
+                _logger.Logar(new LogClass
+                {
+                    Aplicacao = Aplicacao.Customer,
+                    EObjetoJson = true,
+                    EstadoProcesso = EstadoProcesso.Finalizando,
+                    Msg = JsonConvert.SerializeObject(_notifications),
+                    ProcessoId = ProcessoId,
+                    TipoLog = TipoLog.Erro,
+                    Processo = Processo.AtualizarUsuario
+                });
+
+            }
+
             return res;
 
         }
@@ -211,6 +260,17 @@ namespace customerApi.Application.Commands.Customer
             var customerSearch = (await _customerRepository._repositoryConsult
                                                            .SearchAsync(x => x.Id.ToString() == request.Id.ToString().ToLower()))?
                                                            .FirstOrDefault();
+
+            var ProcessoId = Guid.NewGuid();
+            _logger.Logar(new LogClass
+            {
+                Aplicacao = Aplicacao.Customer,
+                EstadoProcesso = EstadoProcesso.Inicio,
+                Msg = "Deletando customer",
+                ProcessoId = ProcessoId,
+                TipoLog = TipoLog.Informacao,
+                Processo = Processo.AtualizarUsuario
+            });
 
             if (customerSearch != null)
             {

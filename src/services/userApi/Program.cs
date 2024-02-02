@@ -280,4 +280,20 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+
+using (var scope = app.Services.CreateScope())
+{
+    using (var appContext = scope.ServiceProvider.GetRequiredService<ApplicationUserRefreshSecurityContext>())
+    {
+        try
+        {
+            appContext.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+}
+
 app.Run();

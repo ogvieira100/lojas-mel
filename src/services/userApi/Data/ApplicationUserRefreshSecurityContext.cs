@@ -13,7 +13,5 @@ namespace userApi.Data
 
         public ApplicationUserRefreshSecurityContext(DbContextOptions<ApplicationUserRefreshSecurityContext> options) : base(options) { }
 
-
-
     }
 }
