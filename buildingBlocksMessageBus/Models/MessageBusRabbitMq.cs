@@ -305,6 +305,7 @@ namespace buildingBlocksMessageBus.Models
 
                 var _channelRpc = _connection.CreateModel();
 
+
                 _channelRpc.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
                 var args = DeadLetterQuee(_channelRpc, propsMessageQueeDto.Arguments);
 
