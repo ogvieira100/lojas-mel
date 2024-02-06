@@ -21,36 +21,24 @@ namespace productApi.V1.Controllers
             _mediatorHandler = mediatorHandler;
         }
 
-
-        [HttpGet]
-        public async Task<IActionResult> GetProduct([FromQuery] string filtro)
-        {
-
-            return Response(null);
-        
-        }
-
-
         [HttpPost]
-        public async Task<IActionResult> PostProduct([FromQuery] string filtro)
+        public async Task<IActionResult> PostProduct([FromBody] InsertProductCommand insertProductCommand )
+        {
+            var respCommand = await _mediatorHandler.SendCommand<InsertProductCommand, InsertProductResponseCommand>(insertProductCommand);
+            if (respCommand.Notifications.Any())
+                _notifications.AddRange(respCommand.Notifications);
+            return Response(respCommand.Response.Id);
+        }
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteProduct([FromRoute] Guid id)
         {
 
+            var respCommand = await _mediatorHandler.SendCommand<DeleteProductCommand, object>(new DeleteProductCommand { Id = id });
+            if (respCommand.Notifications.Any())
+                _notifications.AddRange(respCommand.Notifications);
             return Response(null);
 
         }
-
-
-
-        [HttpDelete]
-        public async Task<IActionResult> DeleteProduct([FromQuery] string filtro)
-        {
-
-            return Response(null);
-
-        }
-
-
-
         [HttpPut]
         public async Task<IActionResult> UpdateProduct([FromBody] UpdateProductCommand updateProductCommand)
         {
