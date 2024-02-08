@@ -4,12 +4,18 @@ using buildingBlocksCore.Identity;
 using buildingBlocksCore.IoC;
 using buildingBlocksCore.Mediator;
 using buildingBlocksCore.Utils;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using NetDevPack.Security.JwtExtensions;
+using productApi.Application.Commands.Products;
+using productApi.Application.Commands.Validation;
 using productApi.Models;
+using Serilog;
+using Serilog.Formatting.Elasticsearch;
+using Serilog.Sinks.Elasticsearch;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -172,6 +178,36 @@ builder.Services.AddDbContext<ApplicationContext>(options =>
 
 
 #endregion
+
+builder.Services.AddLogging();
+
+builder.Services.AddScoped<IValidator<InsertProductCommand>, InsertProductCommandValidator>();
+builder.Services.AddScoped<IValidator<UpdateProductCommand>, UpdateProductCommandValidator>();
+
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .WriteTo.Debug()
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(ConfigureElasticSink(configuration, environment.EnvironmentName))
+    .Enrich.WithProperty("Environment", environment)
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
+
+static ElasticsearchSinkOptions ConfigureElasticSink(IConfigurationRoot configuration, string environment)
+{
+    return new ElasticsearchSinkOptions(new Uri(configuration["ElasticConfiguration:Uri"]))
+    {
+        AutoRegisterTemplate = true,
+        IndexFormat = $"lojasmel-{environment?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}",
+        CustomFormatter = new ElasticsearchJsonFormatter(),
+    };
+}
+
+builder.Logging.ClearProviders();
+builder.Host.UseSerilog(Log.Logger, true);
+
 
 
 var app = builder.Build();

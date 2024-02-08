@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using buildingBlocksCore.Data.PersistData.Interfaces;
+using buildingBlocksCore.Identity;
 using buildingBlocksCore.Mediator;
 using buildingBlocksCore.Mediator.Messages;
 using buildingBlocksCore.Models;
@@ -23,10 +24,25 @@ namespace productApi.Application.Commands.Products
         readonly IValidator<InsertProductCommand> _validatorInsertProductCommand;
         readonly IValidator<UpdateProductCommand> _validatorUpdateProductCommand;
         readonly ILogger<ProductCommandHandler> _logger;
-        public ProductCommandHandler(ILogger<ProductCommandHandler> logger)
+ 
+        public ProductCommandHandler(IBaseRepository<Produto> produtoRepository, 
+            IMapper mapper, IUser user,
+            LNotifications notifications,
+            IMediatorHandler mediatorHandler,
+            IValidator<InsertProductCommand> validatorInsertProductCommand, 
+            IValidator<UpdateProductCommand> validatorUpdateProductCommand,
+            ILogger<ProductCommandHandler> logger)
         {
-            _logger = logger;   
+            _produtoRepository = produtoRepository;
+            _mapper = mapper;
+            _user = user;
+            _notifications = notifications;
+            _mediatorHandler = mediatorHandler;
+            _validatorInsertProductCommand = validatorInsertProductCommand;
+            _validatorUpdateProductCommand = validatorUpdateProductCommand;
+            _logger = logger;
         }
+
         public async Task<ResponseCommad<InsertProductResponseCommand>> Handle(InsertProductCommand request, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
