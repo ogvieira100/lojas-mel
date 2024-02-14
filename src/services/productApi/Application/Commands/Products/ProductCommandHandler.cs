@@ -128,6 +128,28 @@ namespace productApi.Application.Commands.Products
                 return res;
             }
 
+            var productSearch = (await _produtoRepository._repositoryConsult.SearchAsync(x => x.Descricao == request.Descricao && x.Id != request.Id))?.FirstOrDefault();
+            if (productSearch != null)
+            {
+                _notifications.Add(new LNotification
+                {
+                    Message = "Atenção descrição do produto já existe"
+                });
+                res.Notifications.AddRange(_notifications);
+                _logger.Logar(new LogClass
+                {
+                    Aplicacao = Aplicacao.Product,
+                    EstadoProcesso = EstadoProcesso.Processando,
+                    Msg = "Atenção descrição do produto já existe",
+                    ProcessoId = ProcessoId,
+                    TipoLog = TipoLog.Alerta,
+                    Processo = Processo.InserirProduto
+                });
+
+                return res;
+            }
+
+            
             return res;
         }
 
