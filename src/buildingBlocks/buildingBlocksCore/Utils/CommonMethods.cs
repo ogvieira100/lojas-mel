@@ -36,7 +36,8 @@ namespace buildingBlocksCore.Utils
         Invoice = 2,
         Order = 3,
         User = 4,
-        Supplier = 5
+        Supplier = 5,
+        Product = 6
     }
 
     public enum Processo
@@ -44,7 +45,9 @@ namespace buildingBlocksCore.Utils
     
         InserirUsuario = 1,
         AtualizarUsuario = 2,
-        DeletarUsuario = 3
+        DeletarUsuario = 3,
+        InserirProduto = 4,
+        AtualizarProduto = 5
     
     }
 

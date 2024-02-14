@@ -914,6 +914,61 @@ docker run -d --name kibana --network=lojas-mel-network --link elasticsearch:ela
 
 */
 
+GRPC performance comunicação uniderecional protobuf 
+protobuf formato pequeno 
+grpc biderecional canal full duplex 
+suporte a browser grpc limitado 
+
+arquivo proto  
+
+syntax = "proto3";
+
+option csharp_namespace = "NSE.Carrinho.API.Services.gRPC";
+
+package CarrinhoAPI;
+
+service CarrinhoCompras {
+	rpc ObterCarrinho(ObterCarrinhoRequest) returns (CarrinhoClienteResponse) {}	
+}
+
+message ObterCarrinhoRequest {
+
+}
+
+message CarrinhoClienteResponse {
+	string id = 1;
+	string clienteid  = 2;
+	double valortotal = 3;
+	repeated CarrinhoItemResponse itens = 4;
+	bool voucherutilizado = 5;
+	double desconto = 6;
+	VoucherResponse voucher = 7;
+}
+
+message CarrinhoItemResponse {
+	string id = 1;
+	string produtoid = 2;
+	string nome  = 3;
+	int32 quantidade = 4;
+	double valor  = 5;
+	string imagem  = 6;
+}
+
+message VoucherResponse {
+	double percentual = 1;
+	double valordesconto = 2;
+	string codigo = 3;
+	int32 tipodesconto = 4;
+}
+
+
+arquivo de server 
+	<ItemGroup>
+		<Protobuf Include="Protos\carrinho.proto" GrpcServices="Server" />
+	</ItemGroup>
+
+GRPC é interessante porém não tem compatibilidade com tudo não sei aguenta uma quantidade de carga enorme
+
 
 
 
