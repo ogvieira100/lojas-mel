@@ -9,6 +9,6 @@ namespace buildingBlocksCore.Data.ReadData.Interfaces.Repository
 {
     public interface IProdutoMongoRepository : IBaseRepositoryMongo<ProdutoMongo>
     {
-
+       
     }
 }

@@ -10,7 +10,7 @@ namespace buildingBlocksCore.Models
 {
     public abstract class Entity
     {
-        public Guid Id { get; protected set; }
+        public Guid Id { get;  set; }
 
         private List<Event> _notificacoes;
 

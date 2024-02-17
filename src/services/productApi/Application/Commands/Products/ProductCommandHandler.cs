@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using buildingBlocksCore.Data.PersistData.Interfaces;
+using buildingBlocksCore.Data.ReadData.Interfaces.Repository;
+using buildingBlocksCore.Data.ReadData.Repository;
 using buildingBlocksCore.Identity;
 using buildingBlocksCore.Mediator;
 using buildingBlocksCore.Mediator.Messages;
@@ -26,23 +28,32 @@ namespace productApi.Application.Commands.Products
         readonly IValidator<InsertProductCommand> _validatorInsertProductCommand;
         readonly IValidator<UpdateProductCommand> _validatorUpdateProductCommand;
         readonly ILogger<ProductCommandHandler> _logger;
- 
-        public ProductCommandHandler(IBaseRepository<Produto> produtoRepository, 
+        readonly IProdutoMongoRepository _produtoMongoRepository;
+        readonly IPedidoMongoRepository _pedidoMongoRepository;
+        readonly INotaMongoRepository _notaMongoRepository;
+
+        public ProductCommandHandler(IBaseRepository<Produto> produtoRepository,
             IMapper mapper, IUser user,
             LNotifications notifications,
+            IPedidoMongoRepository pedidoMongoRepository,
+            INotaMongoRepository notaMongoRepository,
             IMediatorHandler mediatorHandler,
-            IValidator<InsertProductCommand> validatorInsertProductCommand, 
+            IProdutoMongoRepository produtoMongoRepository,
+            IValidator<InsertProductCommand> validatorInsertProductCommand,
             IValidator<UpdateProductCommand> validatorUpdateProductCommand,
             ILogger<ProductCommandHandler> logger)
         {
             _produtoRepository = produtoRepository;
             _mapper = mapper;
             _user = user;
+            _notaMongoRepository = notaMongoRepository;
+            _pedidoMongoRepository = pedidoMongoRepository;
             _notifications = notifications;
             _mediatorHandler = mediatorHandler;
             _validatorInsertProductCommand = validatorInsertProductCommand;
             _validatorUpdateProductCommand = validatorUpdateProductCommand;
             _logger = logger;
+            _produtoMongoRepository = produtoMongoRepository;
         }
 
         public async Task<ResponseCommad<InsertProductResponseCommand>> Handle(InsertProductCommand request, CancellationToken cancellationToken)
@@ -74,14 +85,17 @@ namespace productApi.Application.Commands.Products
                 return res;
             }
 
-            var productSearch = (await _produtoRepository._repositoryConsult.SearchAsync(x => x.Descricao == request.Descricao ))?.FirstOrDefault();
-            if (productSearch != null)
+            var productSeach = (await _produtoMongoRepository.RepositoryConsultMongo.SearchAsync(x => x.Descricao == request.Descricao))?.FirstOrDefault();
+
+            if (productSeach != null)
             {
-                _notifications.Add(new LNotification {
+                _notifications.Add(new LNotification
+                {
                     Message = "Atenção descrição do produto já existe"
                 });
                 res.Notifications.AddRange(_notifications);
-                _logger.Logar(new LogClass{
+                _logger.Logar(new LogClass
+                {
                     Aplicacao = Aplicacao.Product,
                     EstadoProcesso = EstadoProcesso.Processando,
                     Msg = "Atenção descrição do produto já existe",
@@ -128,7 +142,7 @@ namespace productApi.Application.Commands.Products
                 return res;
             }
 
-            var productSearch = (await _produtoRepository._repositoryConsult.SearchAsync(x => x.Descricao == request.Descricao && x.Id != request.Id))?.FirstOrDefault();
+            var productSearch = (await _produtoMongoRepository.RepositoryConsultMongo.SearchAsync(x => x.Descricao == request.Descricao && x.RelationalId != request.Id.ToString()))?.FirstOrDefault();
             if (productSearch != null)
             {
                 _notifications.Add(new LNotification
@@ -143,19 +157,81 @@ namespace productApi.Application.Commands.Products
                     Msg = "Atenção descrição do produto já existe",
                     ProcessoId = ProcessoId,
                     TipoLog = TipoLog.Alerta,
-                    Processo = Processo.InserirProduto
+                    Processo = Processo.AtualizarProduto
                 });
 
                 return res;
             }
 
-            
+            var productSave = (await _produtoMongoRepository.RepositoryConsultMongo.SearchAsync(x => x.RelationalId == request.Id.ToString()))?.FirstOrDefault();
+            if (productSave != null)
+            {
+                var produtoAtualizar = new Produto();
+                produtoAtualizar.Descricao = request.Descricao;
+                produtoAtualizar.Id = new Guid(productSave.RelationalId);
+                _produtoRepository.Update(produtoAtualizar);
+                await _produtoRepository.unitOfWork.CommitAsync();
+            }
+            else
+            {
+                _notifications.Add(new LNotification
+                {
+                    Message = "Atenção produto inexistente verifique."
+                });
+                res.Notifications.AddRange(_notifications);
+                _logger.Logar(new LogClass
+                {
+                    Aplicacao = Aplicacao.Product,
+                    EstadoProcesso = EstadoProcesso.Processando,
+                    Msg = "Atenção produto inexistente verifique",
+                    ProcessoId = ProcessoId,
+                    TipoLog = TipoLog.Alerta,
+                    Processo = Processo.AtualizarProduto
+                });
+
+            }
             return res;
         }
 
-        public async  Task<ResponseCommad<object>> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
+        public async Task<ResponseCommad<object>> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var resp = new ResponseCommad<object>();
+            var ProcessoId = Guid.NewGuid();
+
+            var pedido = (await _pedidoMongoRepository
+                    .RepositoryConsultMongo
+                    .SearchAsync(x => x.PedidoItens.Any(p => p.ProdutoId == request.Id.ToString())));
+
+            var nota = (await _notaMongoRepository
+                   .RepositoryConsultMongo
+                   .SearchAsync(x => x.NotaItens.Any(p => p.ProdutoId == request.Id.ToString())));
+
+
+            if (pedido != null && pedido.Any()
+                || nota != null && nota.Any())
+            {
+                _notifications.Add(new LNotification
+                {
+                    Message = "Atenção produto tem notas ou pedidos anexados não pode ser deletado."
+                });
+                resp.Notifications.AddRange(_notifications);
+
+                _logger.Logar(new LogClass
+                {
+                    Aplicacao = Aplicacao.Product,
+                    EstadoProcesso = EstadoProcesso.Processando,
+                    Msg = "Atenção produto inexistente verifique",
+                    ProcessoId = ProcessoId,
+                    TipoLog = TipoLog.Alerta,
+                    Processo = Processo.AtualizarProduto
+                });
+            }
+            else
+            { 
+                    
+            }
+            return resp;
+
         }
     }
 }
