@@ -43,6 +43,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiGatewaysUser", "src\apiG
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiGatewayRegister", "src\apiGateways\apiGatewayRegister\apiGatewayRegister.csproj", "{702EB9E6-3393-40E0-B959-37C35EAFCC52}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apiGatewayOrders", "src\apiGateways\apiGatewayOrders\apiGatewayOrders.csproj", "{5B21474B-C8CD-4FAD-ADA0-67C2E44B8AB2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apiGatewayInvoices", "src\apiGateways\apiGatewayInvoices\apiGatewayInvoices.csproj", "{914556F5-8B4F-47D6-BB43-94582D63F677}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +103,14 @@ Global
 		{702EB9E6-3393-40E0-B959-37C35EAFCC52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{702EB9E6-3393-40E0-B959-37C35EAFCC52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{702EB9E6-3393-40E0-B959-37C35EAFCC52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B21474B-C8CD-4FAD-ADA0-67C2E44B8AB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B21474B-C8CD-4FAD-ADA0-67C2E44B8AB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B21474B-C8CD-4FAD-ADA0-67C2E44B8AB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B21474B-C8CD-4FAD-ADA0-67C2E44B8AB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{914556F5-8B4F-47D6-BB43-94582D63F677}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{914556F5-8B4F-47D6-BB43-94582D63F677}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{914556F5-8B4F-47D6-BB43-94582D63F677}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{914556F5-8B4F-47D6-BB43-94582D63F677}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -123,6 +135,8 @@ Global
 		{5CE471EF-BAED-426B-9B69-FD79C5A30494} = {03D6FE76-B475-47B3-9A2E-1B6410829E49}
 		{6568965A-F556-4543-AA69-17503E0F25C4} = {0B8FCE12-A2FC-4935-A2EA-03494E4B32E5}
 		{702EB9E6-3393-40E0-B959-37C35EAFCC52} = {0B8FCE12-A2FC-4935-A2EA-03494E4B32E5}
+		{5B21474B-C8CD-4FAD-ADA0-67C2E44B8AB2} = {0B8FCE12-A2FC-4935-A2EA-03494E4B32E5}
+		{914556F5-8B4F-47D6-BB43-94582D63F677} = {0B8FCE12-A2FC-4935-A2EA-03494E4B32E5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03F9BC10-E55A-471A-BE0A-B7BD2F613E1C}

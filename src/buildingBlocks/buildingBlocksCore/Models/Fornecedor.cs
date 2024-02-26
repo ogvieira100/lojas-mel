@@ -9,7 +9,6 @@ namespace buildingBlocksCore.Models
     public class Fornecedor : EntityDataBase
     {
         public string RazaoSocial { get; set; }
-
         public string Email { get; set; }
         public string CNPJ { get; set; }
         public virtual IEnumerable<Endereco> Enderecos { get; set; }
