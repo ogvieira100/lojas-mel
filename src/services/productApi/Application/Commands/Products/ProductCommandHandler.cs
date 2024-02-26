@@ -108,12 +108,14 @@ namespace productApi.Application.Commands.Products
             }
             var produtoAdicionar = new Produto();
             produtoAdicionar.Descricao = request.Descricao;
+            produtoAdicionar.SetInsertEntity(_user.GetUserId());
             await _produtoRepository.AddAsync(produtoAdicionar);
             await _produtoRepository.unitOfWork.CommitAsync();
             return res;
         }
 
-        public async Task<ResponseCommad<object>> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
+        public async Task<ResponseCommad<object>> Handle(UpdateProductCommand request, 
+            CancellationToken cancellationToken)
         {
             var res = new ResponseCommad<object>();
             var validation = await _validatorUpdateProductCommand.ValidateAsync(request);
@@ -163,14 +165,40 @@ namespace productApi.Application.Commands.Products
                 return res;
             }
 
+            var productIdStr = request.Id.ToString();
+
+            await UpdateProduct(request,
+                res, 
+                ProcessoId
+                , EntityState.Alter);
+            return res;
+        }
+
+        async Task UpdateProduct(UpdateProductCommand request, 
+            ResponseCommad<object> res,
+            Guid ProcessoId,
+            EntityState entityState
+            )
+        {
             var productSave = (await _produtoMongoRepository.RepositoryConsultMongo.SearchAsync(x => x.RelationalId == request.Id.ToString()))?.FirstOrDefault();
             if (productSave != null)
             {
                 var produtoAtualizar = new Produto();
                 produtoAtualizar.Descricao = request.Descricao;
                 produtoAtualizar.Id = new Guid(productSave.RelationalId);
-                _produtoRepository.Update(produtoAtualizar);
-                await _produtoRepository.unitOfWork.CommitAsync();
+                if (entityState == EntityState.Alter)
+                {
+                    produtoAtualizar.SetUpdateEntity(_user.GetUserId());
+                    _produtoRepository.Update(produtoAtualizar);
+                    await _produtoRepository.unitOfWork.CommitAsync();
+                }
+                else
+                {
+                    produtoAtualizar.Descricao = productSave.Descricao;
+                    produtoAtualizar.SetDeleteEntity(_user.GetUserId());
+                    _produtoRepository.Update(produtoAtualizar);
+                    await _produtoRepository.unitOfWork.CommitAsync();
+                }
             }
             else
             {
@@ -188,9 +216,7 @@ namespace productApi.Application.Commands.Products
                     TipoLog = TipoLog.Alerta,
                     Processo = Processo.AtualizarProduto
                 });
-
             }
-            return res;
         }
 
         public async Task<ResponseCommad<object>> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
@@ -227,8 +253,11 @@ namespace productApi.Application.Commands.Products
                 });
             }
             else
-            { 
-                    
+            {
+                await UpdateProduct(new UpdateProductCommand { Id = request.Id },
+                    resp,
+                    ProcessoId, 
+                    EntityState.Delete);
             }
             return resp;
 

@@ -85,6 +85,30 @@ namespace buildingBlocksCore.Models
     public abstract class EntityDataBase : Entity
     {
 
+        public void SetDeleteEntity(Guid UserDeletedId)
+        { 
+            Active = false;
+            EntityState = EntityState.Delete;
+            DeleteDate = DateTime.Now;
+            this.UserDeletedId = UserDeletedId;
+        }
+
+        public void SetUpdateEntity(Guid UserUpdatedId)
+        {
+            Active = true;
+            EntityState = EntityState.Delete;
+            DateUpdate = DateTime.Now;
+            this.UserUpdatedId = UserUpdatedId;
+        }
+        public void SetInsertEntity(Guid UserInsertedId)
+        {
+            Active = true;
+            EntityState = EntityState.Insert;
+            DateRegister = DateTime.Now;
+            this.UserInsertedId = UserInsertedId;
+        }
+
+
         protected EntityDataBase() : base()
         {
 
