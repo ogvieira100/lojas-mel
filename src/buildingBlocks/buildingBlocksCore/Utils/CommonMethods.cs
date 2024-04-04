@@ -47,7 +47,9 @@ namespace buildingBlocksCore.Utils
         AtualizarUsuario = 2,
         DeletarUsuario = 3,
         InserirProduto = 4,
-        AtualizarProduto = 5
+        AtualizarProduto = 5,
+        InserirFornecedor = 6,
+        AtualizarFornecedor = 7
     
     }
 
