@@ -1,4 +1,5 @@
-﻿using Asp.Versioning;
+﻿using apiGatewayRegister.Services;
+using Asp.Versioning;
 using buildingBlocksCore.Utils;
 using buildingBlocksServices.Controllers;
 using Microsoft.AspNetCore.Authorization;
@@ -13,9 +14,11 @@ namespace apiGatewayRegister.V1
     [Authorize]
     public class ProductController : MainController
     {
-        public ProductController(LNotifications notifications) : base(notifications)
-        {
 
+        readonly IProductService _productService;
+        public ProductController(IProductService productService,LNotifications notifications) : base(notifications)
+        {
+            _productService = productService;   
         }
     }
 }
