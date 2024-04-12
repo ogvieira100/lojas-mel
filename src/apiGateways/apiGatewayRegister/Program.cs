@@ -1,9 +1,23 @@
-using apiGatewayRegister.Model;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+
+using Asp.Versioning;
+using buildingBlocksCore.Identity;
+using buildingBlocksCore.Utils;
+using buildingBlocksServices.Models;
+using System.Collections.Generic;
+using Polly;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+
 using NetDevPack.Security.JwtExtensions;
+using Microsoft.OpenApi.Models;
 using System.Reflection;
+using buildingBlocksCore.IoC;
+using buildingBlocksCore.Mediator;
+using buildingBlocksCore.Data.PersistData.Context;
+using Microsoft.EntityFrameworkCore;
+using apiGatewayRegister.Model;
+using apiGatewayRegister.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,12 +32,35 @@ builder.Configuration.AddJsonFile("appsettings.json", true, true)
 
 // Add services to the container.
 
+
+
 builder.Services.AddControllers();
 
 
 var appSettings = configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettings);
 var appSettingsValues = appSettings.Get<AppSettings>();
+
+/*cors*/
+builder.Services.AddCors(options =>
+{
+
+    options.AddPolicy("Development",
+          builder =>
+              builder
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowAnyOrigin()
+              ); // allow credentials
+
+    options.AddPolicy("Production",
+        builder =>
+            builder
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowAnyOrigin()
+              ); // allow credentials
+});
 
 // JWT Setup
 
@@ -47,6 +84,23 @@ builder.Services.AddAuthorization(options =>
 });
 
 
+/*versioning*/
+builder.Services.AddApiVersioning(options =>
+{
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+}).AddApiExplorer(
+options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddScoped<IUser, AspNetUser>();
+builder.Services.AddScoped<LNotifications>();
+builder.Services.AddTransient<HttpClientAuthorizationDelegatingHandler>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -89,6 +143,36 @@ builder.Services.AddSwaggerGen(option =>
         option.IncludeXmlComments(xmlCommentsFullPath);
 
 });
+
+builder.Services.AddScoped<IMediatorHandler, MediatorHandler>();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+builder.Services.AddHttpClient<IProductService, ProductService>(opt =>
+{
+    opt.BaseAddress = new Uri(configuration.GetSection("AppSettings:ProductApiUrl").Value);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+{
+    ServerCertificateCustomValidationCallback =
+        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+})
+.AddHttpMessageHandler<HttpClientAuthorizationDelegatingHandler>()
+.AddPolicyHandler(PollyExtensions.PollyWaitAndRetryAsync())
+.AddTransientHttpErrorPolicy(
+p => p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
+
+builder.Services.AddHttpClient<IProductService, ProductService>(opt =>
+{
+    opt.BaseAddress = new Uri(configuration.GetSection("AppSettings:ProductApiUrl").Value);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+{
+    ServerCertificateCustomValidationCallback =
+        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+})
+.AddHttpMessageHandler<HttpClientAuthorizationDelegatingHandler>()
+.AddPolicyHandler(PollyExtensions.PollyWaitAndRetryAsync())
+.AddTransientHttpErrorPolicy(
+p => p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
+
 
 var app = builder.Build();
 

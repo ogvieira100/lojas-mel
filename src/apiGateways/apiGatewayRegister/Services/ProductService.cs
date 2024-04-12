@@ -35,7 +35,7 @@ namespace apiGatewayRegister.Services
         public async Task<BaseResponseApi<ProductRegisterResponse>> ProductRegisterAsync(ProductRegisterRequest  productRegisterRequest)
         {
             var httpContent = GetContentJsonUTF8(productRegisterRequest);
-            var responseLogin = await _httpClient.PostAsync($"api/v1/user/nova-conta", httpContent);
+            var responseLogin = await _httpClient.PostAsync($"api/v1/product", httpContent);
             await TreatErrorsResponse<ProductRegisterResponse>(responseLogin);
             if (_notification.Any())
                 return null;
