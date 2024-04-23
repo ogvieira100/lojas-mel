@@ -43,9 +43,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiGatewaysUser", "src\apiG
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiGatewayRegister", "src\apiGateways\apiGatewayRegister\apiGatewayRegister.csproj", "{702EB9E6-3393-40E0-B959-37C35EAFCC52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apiGatewayOrders", "src\apiGateways\apiGatewayOrders\apiGatewayOrders.csproj", "{5B21474B-C8CD-4FAD-ADA0-67C2E44B8AB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiGatewayOrders", "src\apiGateways\apiGatewayOrders\apiGatewayOrders.csproj", "{5B21474B-C8CD-4FAD-ADA0-67C2E44B8AB2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apiGatewayInvoices", "src\apiGateways\apiGatewayInvoices\apiGatewayInvoices.csproj", "{914556F5-8B4F-47D6-BB43-94582D63F677}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiGatewayInvoices", "src\apiGateways\apiGatewayInvoices\apiGatewayInvoices.csproj", "{914556F5-8B4F-47D6-BB43-94582D63F677}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAppReact", "src\web_reactjs\WebAppReact.csproj", "{6E38E2B1-6E8C-497A-A687-E524C2894714}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +113,10 @@ Global
 		{914556F5-8B4F-47D6-BB43-94582D63F677}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{914556F5-8B4F-47D6-BB43-94582D63F677}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{914556F5-8B4F-47D6-BB43-94582D63F677}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E38E2B1-6E8C-497A-A687-E524C2894714}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E38E2B1-6E8C-497A-A687-E524C2894714}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E38E2B1-6E8C-497A-A687-E524C2894714}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E38E2B1-6E8C-497A-A687-E524C2894714}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -137,6 +143,7 @@ Global
 		{702EB9E6-3393-40E0-B959-37C35EAFCC52} = {0B8FCE12-A2FC-4935-A2EA-03494E4B32E5}
 		{5B21474B-C8CD-4FAD-ADA0-67C2E44B8AB2} = {0B8FCE12-A2FC-4935-A2EA-03494E4B32E5}
 		{914556F5-8B4F-47D6-BB43-94582D63F677} = {0B8FCE12-A2FC-4935-A2EA-03494E4B32E5}
+		{6E38E2B1-6E8C-497A-A687-E524C2894714} = {6FE25B5C-7237-48AF-B619-9D033DD3C913}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03F9BC10-E55A-471A-BE0A-B7BD2F613E1C}

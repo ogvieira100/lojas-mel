@@ -76,6 +76,7 @@ namespace buildingBlocksCore.Models.Dto
         public string Id { get; set; }
         public string Email { get; set; }
         public IEnumerable<UserClaimDto> Claims { get; set; }
+        public string Name { get; set; }
 
         public UserTokenDto()
         {

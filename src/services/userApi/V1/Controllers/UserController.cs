@@ -205,6 +205,7 @@ namespace userApi.V1.Controllers
                     UserName = userRegister.Email,
                     Email = userRegister.Email,
                     EmailConfirmed = true
+                    
                 };
 
                 var result = await _userManager.CreateAsync(user, userRegister.Password);
@@ -407,7 +408,8 @@ namespace userApi.V1.Controllers
                 UserToken = new UserTokenDto
                 {
                     Id = user.Id,
-                    Email = user.Email,
+                    Email = user.Email ?? "",
+                    Name = user.NormalizedUserName ?? "", 
                     Claims = claims.Select(c => new UserClaimDto { Type = c.Type, Value = c.Value })
                 }
             };
